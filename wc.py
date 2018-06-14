@@ -113,10 +113,6 @@ class WorldCupSlackReporter:
         await asyncio.sleep(self.update_rate)
         asyncio.ensure_future(self.monitor())
 
-    @staticmethod
-    def _output(*message):
-        sys.stdout.write('{}\n'.format(' '.join(message)))
-
     async def _slack_output(self, message):
         async def _send(url, output):
             try:
@@ -138,6 +134,7 @@ async def main():
         WCS.slack_instances = settings.get('slack_instances')
         WCS.slack_payload = settings.get('slack_payload')
     await WCS.get_todays_matches()
+    await asyncio.sleep(5)
     asyncio.ensure_future(WCS.monitor())
 
 
