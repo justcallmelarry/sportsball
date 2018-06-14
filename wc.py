@@ -11,8 +11,7 @@ from dateutil import parser
 class WorldCupSlackReporter:
     def __init__(self):
         self.today_url = 'http://worldcup.sfg.io/matches/today'
-        self.curmatch_url = 'http://worldcup.sfg.io/matches/current'
-        self.results_url = 'http://worldcup.sfg.io/matches/results'
+        self.curmatch_url = 'http://worldcup.sfg.io/matches/current'  # currently not used, as long as today works as intended
 
         self.sem = asyncio.Semaphore(5)
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False))
@@ -50,7 +49,7 @@ class WorldCupSlackReporter:
             matches = await self.api_get(self.today_url)
         except ConnectionError as e:
             self.logger.error(e)
-        message = 'Today we are looking forward to:\n'
+        message = 'Today\'s matches:\n'
         for match in matches:
             hteam = match.get('home_team').get('country')
             ateam = match.get('away_team').get('country')
@@ -105,7 +104,7 @@ class WorldCupSlackReporter:
                 self.matches[match_id]['status'] = 2
             timediff = time.time() - self.matches.get(match_id).get('time')
             if timediff > 7200:
-                message += f'Match (probably) ended (120 minutes since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
