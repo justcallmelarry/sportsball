@@ -1,10 +1,11 @@
+from dateutil import parser
+from datetime import datetime
 import aiohttp
 import asyncio
-import logging
 import json
+import logging
 import os
 import time
-from dateutil import parser
 
 
 class WorldCupSlackReporter:
@@ -17,6 +18,7 @@ class WorldCupSlackReporter:
         self.logger = logging.getLogger(__file__)
         self.logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        self.filepath = os.path.abspath(os.path.dirname(__file__))
         self.slack_instances = []
         self.slack_payload = None
         self.update_rate = 90
@@ -41,6 +43,10 @@ class WorldCupSlackReporter:
         response = await _get(url)
         if response[1] != 200:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
+        with open(os.path.join(self.filepath, 'match-requests.log'), 'a+') as logfile:
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            data = json.dumps(json.loads(response[0]))
+            logfile.write(f'{now}: {data}\n')
         return json.loads(response[0])
 
     async def get_todays_matches(self):
@@ -57,7 +63,8 @@ class WorldCupSlackReporter:
             match_id = match.get('home_team').get('code') + match.get('away_team').get('code')
             if match_id not in self.matches:
                 self.matches[match_id] = {
-                    'score': '0 - 0',
+                    'score': 0,
+                    'goals': {'h': 0, 'a': 0},
                     'event_ids': [],
                     'status': 0,
                     'time': None
@@ -74,10 +81,16 @@ class WorldCupSlackReporter:
             message = ''
             hteam = match.get('home_team').get('country')
             hteamgoals = match.get('home_team').get('goals')
+
             ateam = match.get('away_team').get('country')
             ateamgoals = match.get('away_team').get('goals')
-            score = f'{hteamgoals} - {ateamgoals}'
+
+            score = hteamgoals + ateamgoals
             match_id = match.get('home_team').get('code') + match.get('away_team').get('code')
+            if hteamgoals < self.matches.get(match_id).get('goals').get('h'):
+                hteamgoals = self.matches.get(match_id).get('goals').get('h')
+            if ateamgoals < self.matches.get(match_id).get('goals').get('a'):
+                ateamgoals = self.matches.get(match_id).get('goals').get('a')
 
             if match.get('status') == 'in progress' and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} vs {ateam} just started!\n'
@@ -91,12 +104,12 @@ class WorldCupSlackReporter:
                 if eid.get('id') in self.matches.get(match_id).get('event_ids'):
                     continue
                 self.matches[match_id]['event_ids'].append(eid.get('id'))
-                event_text = self.event_types.get(eid.get('type_of_event')).replace('[player]', eid.get('player'))
-                if not event_text:
+                event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player'))
+                if event_text == '':
                     continue
-                message += f'{hteam} (vs {ateam}): {event_text}\n'
-            if score != self.matches.get(match_id).get('score'):
-                message += f'GOOOOAL! {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                message += f'{event_text}\n'
+            if score > self.matches.get(match_id).get('score'):
+                message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
             if match.get('status') == 'completed' or match.get('winner'):
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
@@ -129,7 +142,7 @@ class WorldCupSlackReporter:
 
 async def main():
     WCS = WorldCupSlackReporter()
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'settings.json'), 'r') as settings_file:
+    with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
         settings = json.loads(settings_file.read())
         WCS.slack_instances = settings.get('slack_instances')
         WCS.slack_payload = settings.get('slack_payload')
