@@ -99,19 +99,19 @@ class WorldCupSlackReporter:
 
             if self.matches.get(match_id).get('status') == 2:
                 continue
-            for item in match.get('home_team_events'):
-                item['code'] = match.get('home_team').get('code')
-            for item in match.get('away_team_events'):
-                item['code'] = match.get('away_team').get('code')
-            events = match.get('home_team_events') + match.get('away_team_events')
-            for eid in sorted(events, key=lambda x: x.get('id')):
-                if eid.get('id') in self.matches.get(match_id).get('event_ids'):
-                    continue
-                self.matches[match_id]['event_ids'].append(eid.get('id'))
-                event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player')).replace('[country]', eid.get('code'))
-                if event_text == '':
-                    continue
-                message += f'{event_text}\n'
+            # for item in match.get('home_team_events'):
+            #     item['code'] = match.get('home_team').get('code')
+            # for item in match.get('away_team_events'):
+            #     item['code'] = match.get('away_team').get('code')
+            # events = match.get('home_team_events') + match.get('away_team_events')
+            # for eid in sorted(events, key=lambda x: x.get('id')):
+            #     if eid.get('id') in self.matches.get(match_id).get('event_ids'):
+            #         continue
+            #     self.matches[match_id]['event_ids'].append(eid.get('id'))
+            #     event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player')).replace('[country]', eid.get('code'))
+            #     if event_text == '':
+            #         continue
+            #     message += f'{event_text}\n'
             if match.get('time') == 'half-time' and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
