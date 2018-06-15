@@ -22,6 +22,7 @@ Needs a `settings.json` file with the following information:
 
 
 Requires: python 3.6
+
 Modules not installed by deafult:
 * aiohttp
 * dateutil (python-dateutil)
