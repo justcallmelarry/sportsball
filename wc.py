@@ -11,7 +11,6 @@ import time
 class WorldCupSlackReporter:
     def __init__(self):
         self.today_url = 'http://worldcup.sfg.io/matches/today'
-        self.curmatch_url = 'http://worldcup.sfg.io/matches/current'  # currently not used, as long as today works as intended
 
         self.sem = asyncio.Semaphore(5)
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False))
@@ -115,7 +114,7 @@ class WorldCupSlackReporter:
                 message += f'{event_text}\n'
             if match.get('time') == 'half-time' and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
-                message += f'{hteam} {hteamgoals} vs {ateamgoals} {ateam}: half-time\n'
+                message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
             if score > self.matches.get(match_id).get('score'):
                 message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
