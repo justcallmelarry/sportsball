@@ -2,10 +2,10 @@ import aiohttp
 import asyncio
 import logging
 import json
-import sys
 import os
 import time
 from dateutil import parser
+from datetime import timedelta
 
 
 class WorldCupSlackReporter:
@@ -54,7 +54,7 @@ class WorldCupSlackReporter:
             hteam = match.get('home_team').get('country')
             ateam = match.get('away_team').get('country')
             venue = match.get('location') + ', ' + match.get('venue')
-            start_time = parser.parse(match.get('datetime')).strftime('%H:%M')
+            start_time = (parser.parse(match.get('datetime')) - timedelta(hours=2)).strftime('%H:%M')
             match_id = match.get('home_team').get('code') + match.get('away_team').get('code')
             if match_id not in self.matches:
                 self.matches[match_id] = {
@@ -102,10 +102,11 @@ class WorldCupSlackReporter:
             if match.get('status') == 'completed' or match.get('winner'):
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
-            timediff = time.time() - self.matches.get(match_id).get('time')
-            if timediff > 7200:
-                message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-                self.matches[match_id]['status'] = 2
+            if self.matches.get(match_id).get('status') == 1:
+                timediff = time.time() - self.matches.get(match_id).get('time')
+                if timediff > 7200:
+                    message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                    self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
