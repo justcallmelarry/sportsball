@@ -123,7 +123,7 @@ class WorldCupSlackReporter:
                 self.matches[match_id]['status'] = 2
             if self.matches.get(match_id).get('status') == 1:
                 timediff = time.time() - self.matches.get(match_id).get('time')
-                if timediff > 7200:
+                if timediff > 9000:
                     message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                     self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
