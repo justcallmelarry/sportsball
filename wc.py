@@ -67,7 +67,8 @@ class WorldCupSlackReporter:
                     'goals': {'h': 0, 'a': 0},
                     'event_ids': [],
                     'status': 0,
-                    'time': None
+                    'time': None,
+                    'half-time': False
                 }
             message += f'{start_time}: {hteam} vs {ateam} @ {venue}\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
@@ -112,10 +113,13 @@ class WorldCupSlackReporter:
                 if event_text == '':
                     continue
                 message += f'{event_text}\n'
+            if match.get('time') == 'half-time' and not self.matches.get(match_id).get('half-time'):
+                self.matches[match_id]['half-time'] = True
+                message += f'{hteam} {hteamgoals} vs {ateamgoals} {ateam}: half-time\n'
             if score > self.matches.get(match_id).get('score'):
                 message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
-            if match.get('status') == 'completed' or match.get('winner'):
+            if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             if self.matches.get(match_id).get('status') == 1:
