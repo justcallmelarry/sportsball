@@ -25,11 +25,11 @@ class WorldCupSlackReporter:
 
         self.matches = {}
         self.event_types = {
-            'goal-own': 'Oh no, [player] just scored a goal on the wrong side of the field!',
-            'yellow-card': '[player] just received a yellow card',
-            'red-card': '[player] just received a red card',
-            'goal': '[player] just scored a goooooooal!',
-            'goal-penalty': '[player] gets a goal penalty'
+            'goal-own': '[country]: Oh no, [player] just scored a goal on the wrong side of the field!',
+            'yellow-card': '[country]: [player] just received a yellow card',
+            'red-card': '[country]: [player] just received a red card',
+            'goal': '[country]: [player] just scored a goooooooal!',
+            'goal-penalty': '[country]: [player] gets a goal penalty'
         }
 
     async def api_get(self, url):
@@ -99,12 +99,16 @@ class WorldCupSlackReporter:
 
             if self.matches.get(match_id).get('status') == 2:
                 continue
+            for item in match.get('home_team_events'):
+                item['code'] = match.get('home_team').get('code')
+            for item in match.get('away_team_events'):
+                item['code'] = match.get('away_team').get('code')
             events = match.get('home_team_events') + match.get('away_team_events')
             for eid in sorted(events, key=lambda x: x.get('id')):
                 if eid.get('id') in self.matches.get(match_id).get('event_ids'):
                     continue
                 self.matches[match_id]['event_ids'].append(eid.get('id'))
-                event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player'))
+                event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player')).replace('[country]', eid.get('code'))
                 if event_text == '':
                     continue
                 message += f'{event_text}\n'
