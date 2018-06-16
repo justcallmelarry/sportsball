@@ -58,7 +58,7 @@ class WorldCupSlackReporter:
             hteam = match.get('home_team').get('country')
             ateam = match.get('away_team').get('country')
             venue = match.get('location') + ', ' + match.get('venue')
-            start_time = parser.parse(match.get('datetime')).strftime('%H:%M') + timedelta(hours=2)
+            start_time = (parser.parse(match.get('datetime')) + timedelta(hours=2)).strftime('%H:%M')
             match_id = match.get('home_team').get('code') + match.get('away_team').get('code')
             if match_id not in self.matches:
                 self.matches[match_id] = {
