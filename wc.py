@@ -117,7 +117,8 @@ class WorldCupSlackReporter:
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
             if score > self.matches.get(match_id).get('score'):
-                message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                # message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'  # uncomment here if uncommenting events
+                message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
             if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
