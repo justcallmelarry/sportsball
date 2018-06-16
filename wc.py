@@ -58,7 +58,7 @@ class WorldCupSlackReporter:
             hteam = match.get('home_team').get('country')
             ateam = match.get('away_team').get('country')
             venue = match.get('location') + ', ' + match.get('venue')
-            start_time = parser.parse(match.get('datetime')).strftime('%H:%M')
+            # start_time = parser.parse(match.get('datetime')).strftime('%H:%M') -- commented out until a time zone is decided on
             match_id = match.get('home_team').get('code') + match.get('away_team').get('code')
             if match_id not in self.matches:
                 self.matches[match_id] = {
@@ -69,7 +69,8 @@ class WorldCupSlackReporter:
                     'time': None,
                     'half-time': False
                 }
-            message += f'{start_time}: {hteam} vs {ateam} @ {venue}\n'
+            # message += f'{start_time}: {hteam} vs {ateam} @ {venue}\n' -- commented out until a time zone is decided on
+            message += f'{hteam} vs {ateam} @ {venue}\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
@@ -99,6 +100,7 @@ class WorldCupSlackReporter:
 
             if self.matches.get(match_id).get('status') == 2:
                 continue
+            # -- commented out since events and goals do not seem to update at the same time --
             # for item in match.get('home_team_events'):
             #     item['code'] = match.get('home_team').get('code')
             # for item in match.get('away_team_events'):
