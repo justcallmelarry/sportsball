@@ -38,8 +38,6 @@ class WorldCupSlackReporter:
         if response[1] != 200:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
         the_page = BS(response[0], 'html.parser')
-        with open(os.path.join(self.filepath, 'html', f'{datetime.now()}.html'), 'w') as logfile:
-            logfile.write(response[0].decode('utf8'))
         return the_page
 
     @staticmethod
