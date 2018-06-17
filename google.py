@@ -124,7 +124,6 @@ class WorldCupSlackReporter:
             except Exception:
                 status = status
             status = status.lower()
-            print(status)
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
