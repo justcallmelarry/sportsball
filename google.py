@@ -149,7 +149,7 @@ class WorldCupSlackReporter:
             if value.get('status') in (0, 2):
                 continue
             if key not in local_matches:
-                message += f'Match ended! Final score:\n{value.get("hteam")} {score} {value.get("ateam")}\n'
+                asyncio.ensure_future(self._slack_output(f'Match ended! Final score:\n{value.get("hteam")} {score} {value.get("ateam")}\n'))
                 self.matches[key]['status'] = 2
 
     async def monitor(self):
