@@ -36,12 +36,12 @@ Once you start running the script it will update on today's matches, then keep r
 Personally running it on a server with a cronjob that starts a screen with the script at 9 in the morning, then kills the screen in the evening.
 
 The different .py files use different ways to find out the information needed:
-* wc.py uses the API of https://github.com/estiens/world_cup_json
-* fd.py uses the API of football-data.org (a token from there is needed)
-* google.py is a webscraper that uses googles real time updates
+* `wc.py` uses the API of https://github.com/estiens/world_cup_json
+* `fd.py` uses the API of football-data.org (a token from there is needed)
+* `google.py` is a webscraper that uses googles real time updates
 
 
-### Disclaier
+### Disclaimer
 All of the updaters work on a scraper, which is inherently not a very safe way to gather information.
 The code is mostly written in a few hours and then trying to monkey-patch once an error is found.
 Do not use the code as a good example of python code, and keep in mind that the data it relies upon might fail.
