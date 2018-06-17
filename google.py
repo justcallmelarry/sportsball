@@ -16,6 +16,8 @@ class WorldCupSlackReporter:
         self.schedule_url = 'https://www.google.se/search?q=world+cup+schedule'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         self.hours_to_add = 0
+        self.matches = {}
+        self.sleep = 5
 
         self.sem = asyncio.Semaphore(5)
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False))
@@ -23,17 +25,9 @@ class WorldCupSlackReporter:
         self.logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         self.filepath = os.path.abspath(os.path.dirname(__file__))
+
         self.slack_instances = []
         self.slack_payload = None
-
-        self.matches = {}
-        self.event_types = {
-            'goal-own': '[country]: Oh no, [player] just scored a goal on the wrong side of the field!',
-            'yellow-card': '[country]: [player] just received a yellow card',
-            'red-card': '[country]: [player] just received a red card',
-            'goal': '[country]: [player] just scored a goooooooal!',
-            'goal-penalty': '[country]: [player] gets a goal penalty'
-        }
 
     async def url_get(self, url):
         async def _get(url):
@@ -191,7 +185,7 @@ async def main():
         WCS.slack_payload = settings.get('slack_payload')
         WCS.hours_to_add = settings.get('hours_to_add')
     await WCS.get_todays_matches()
-    await asyncio.sleep(5)
+    await asyncio.sleep(WCS.sleep)
     asyncio.ensure_future(WCS.monitor())
 
 
