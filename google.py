@@ -71,10 +71,14 @@ class WorldCupSlackReporter:
             ateam = self.get_info(match, [4, 1, 1, 0])
             ateamgoals = self.get_info(match, [4, 1, 0])
             match_type = self.get_info(match, [1, 0, 0, 2])
-            if hteamgoals == '':
+            try:
+                int(hteamgoals)
+            except Exception:
                 hteamgoals = '0'
-            if ateamgoals == '':
-                ateamgoals == '0'
+            try:
+                int(ateamgoals)
+            except Exception:
+                ateamgoals = '0'
             try:
                 when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
                 when = when[0].text, when[1].text
