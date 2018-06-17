@@ -112,6 +112,10 @@ class WorldCupSlackReporter:
                 status = match.contents[0].contents[4].contents[0].contents[1].contents[0].text
             except Exception:
                 status = ''
+            try:
+                status += match.contents[0].contents[4].contents[0].contents[1].contents[2].text
+            except Exception:
+                status = status
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
