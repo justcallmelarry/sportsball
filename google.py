@@ -90,7 +90,6 @@ class WorldCupSlackReporter:
                     'status': 0 if not started else 1,
                     'hteam': hteam,
                     'ateam': ateam,
-                    'time': None if not started else time.time(),
                     'half-time': False
                 }
             message += f'{start_time}: {hteam} vs {ateam} ({match_type})\n'
@@ -129,7 +128,6 @@ class WorldCupSlackReporter:
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} vs {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
-                self.matches[match_id]['time'] = time.time()
 
             if self.matches.get(match_id).get('status') in (0, 2):
                 continue
@@ -145,10 +143,6 @@ class WorldCupSlackReporter:
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
-            timediff = time.time() - self.matches.get(match_id).get('time')
-            if timediff > 9000:
-                message += f'Match (probably) ended (2.5h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-                self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
         for key, value in self.matches.items():
@@ -156,7 +150,7 @@ class WorldCupSlackReporter:
                 continue
             if key not in local_matches:
                 message += f'Match ended! Final score:\n{value.get("hteam")} {score} {value.get("ateam")}\n'
-                self.matches[match_id]['status'] = 2
+                self.matches[key]['status'] = 2
 
     async def monitor(self):
         asyncio.ensure_future(self.get_current_matches())
