@@ -67,8 +67,14 @@ class WorldCupSlackReporter:
             started = False
             match = match.contents[0]
             hteam = self.get_info(match, [2, 1, 1, 0])
+            hteamgoals = self.get_info(match, [2, 1, 0])
             ateam = self.get_info(match, [4, 1, 1, 0])
+            ateamgoals = self.get_info(match, [4, 1, 0])
             match_type = self.get_info(match, [1, 0, 0, 2])
+            if hteamgoals == '':
+                hteamgoals = '0'
+            if ateamgoals == '':
+                ateamgoals == '0'
             try:
                 when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
                 when = when[0].text, when[1].text
@@ -81,9 +87,11 @@ class WorldCupSlackReporter:
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
-                    'score': '0 - 0',
+                    'score': f'{hteamgoals} - {ateamgoals}',
                     'event_ids': [],
                     'status': 0 if not started else 1,
+                    'hteam': hteam,
+                    'ateam': ateam,
                     'time': None if not started else time.time(),
                     'half-time': False
                 }
@@ -97,6 +105,7 @@ class WorldCupSlackReporter:
             self.logger.error(e)
             return
         matches = page.findAll('div', class_='imspo_mt__mtc-no')
+        local_matches = {}
         for match in matches:
             match = match.contents[0]
             message = ''
@@ -107,6 +116,7 @@ class WorldCupSlackReporter:
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
+            local_matches[match_id] = True
             try:
                 status = match.contents[0].contents[4].contents[0].contents[1].contents[0].text
             except Exception:
@@ -142,6 +152,12 @@ class WorldCupSlackReporter:
                 message += f'Match (probably) ended (2.5h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
+        for key, value in self.matches.items():
+            if value.get('status') == 2:
+                continue
+            if key not in local_matches:
+                message += f'Match ended! Final score:\n{value.get("hteam")} {score} {value.get("ateam")}\n'
+                self.matches[match_id]['status'] = 2
 
     async def monitor(self):
         asyncio.ensure_future(self.get_current_matches())
