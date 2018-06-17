@@ -69,16 +69,18 @@ class WorldCupSlackReporter:
             hteam = self.get_info(match, [2, 1, 1, 0])
             ateam = self.get_info(match, [4, 1, 1, 0])
             match_type = self.get_info(match, [1, 0, 0, 2])
-            when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
-            when = when[0].text, when[1].text
+            try:
+                when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
+                when = when[0].text, when[1].text
+            except Exception as e:
+                when = ('Today', 'Already started')
             if when[0] not in ('Idag', 'Today'):
                 continue
-            start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M')
+            start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if when[1] != 'Already started' else when[1]
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
-                    'score': 0,
-                    'goals': {'h': 0, 'a': 0},
+                    'score': '0 - 0',
                     'event_ids': [],
                     'status': 0,
                     'time': None,
@@ -98,43 +100,42 @@ class WorldCupSlackReporter:
             match = match.contents[0]
             message = ''
             hteam = self.get_info(match, [2, 1, 1, 0])
+            hteamgoals = self.get_info(match, [2, 1, 0])
             ateam = self.get_info(match, [4, 1, 1, 0])
+            ateamgoals = self.get_info(match, [4, 1, 0])
             match_id = hteam + ateam
+            if match_id not in self.matches:
+                continue
+            try:
+                status = match.contents[0].contents[4].contents[0].contents[1].contents[0].text
+            except Exception:
+                status = ''
+            score = f'{hteamgoals} - {ateamgoals}'
 
-            status = None
-
-            hteamgoals = 0
-            ateamgoals = 0
-            score = hteamgoals + ateamgoals
-
-            if hteamgoals < self.matches.get(match_id).get('goals').get('h'):
-                hteamgoals = self.matches.get(match_id).get('goals').get('h')
-            if ateamgoals < self.matches.get(match_id).get('goals').get('a'):
-                ateamgoals = self.matches.get(match_id).get('goals').get('a')
-
-            return
-            if status == 'live' and self.matches.get(match_id).get('status') == 0:
+            if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} vs {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
                 self.matches[match_id]['time'] = time.time()
 
-            if self.matches.get(match_id).get('status') == 2:
+            if self.matches.get(match_id).get('status') in (0, 2):
                 continue
 
-            if match.get('time') == 'half-time' and not self.matches.get(match_id).get('half-time'):
+            if any(x in status.lower() for x in ('half-time', 'halvtid', 'ht')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
-            if score > self.matches.get(match_id).get('score'):
+
+            if score != self.matches.get(match_id).get('score'):
                 message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
-            if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
-                message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-                self.matches[match_id]['status'] = 2
-            if self.matches.get(match_id).get('status') == 1:
-                timediff = time.time() - self.matches.get(match_id).get('time')
-                if timediff > 9000:
-                    message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-                    self.matches[match_id]['status'] = 2
+
+            # if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
+            #     message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+            #     self.matches[match_id]['status'] = 2
+            # if self.matches.get(match_id).get('status') == 1:
+            #     timediff = time.time() - self.matches.get(match_id).get('time')
+            #     if timediff > 9000:
+            #         message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+            #         self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
@@ -165,12 +166,11 @@ async def main():
         WCS.hours_to_add = settings.get('hours_to_add')
     await WCS.get_todays_matches()
     await asyncio.sleep(5)
-    await WCS.session.close()
-    # asyncio.ensure_future(WCS.monitor())
+    asyncio.ensure_future(WCS.monitor())
 
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-    # loop.run_forever()
+    loop.run_forever()
     loop.close()
