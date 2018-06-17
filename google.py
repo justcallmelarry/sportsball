@@ -80,7 +80,7 @@ class WorldCupSlackReporter:
             except Exception as e:
                 started = True
                 when = ('Today', 'Already started')
-            if when[0] not in ('Idag', 'Today', 'Tomorrow', 'Imorgon'):
+            if when[0] not in ('Idag', 'Today'):
                 continue
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if when[1] != 'Already started' else when[1]
             match_id = hteam + ateam
