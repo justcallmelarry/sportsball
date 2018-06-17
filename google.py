@@ -10,9 +10,7 @@ import random
 
 class WorldCupSlackReporter:
     def __init__(self):
-        self.today_url = 'http://worldcup.sfg.io/matches/today'
-
-        self.schedule_url = 'https://www.google.se/search?q=world+cup+schedule'
+        self.today_url = 'https://www.google.se/search?q=world+cup+today'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         self.hours_to_add = 0
         self.matches = {}
@@ -52,7 +50,7 @@ class WorldCupSlackReporter:
 
     async def get_todays_matches(self):
         try:
-            page = await self.url_get(self.schedule_url)
+            page = await self.url_get(self.today_url)
         except ConnectionError as e:
             self.logger.error(e)
             return
@@ -98,7 +96,7 @@ class WorldCupSlackReporter:
 
     async def get_current_matches(self):
         try:
-            page = await self.url_get(self.schedule_url)
+            page = await self.url_get(self.today_url)
         except ConnectionError as e:
             self.logger.error(e)
             return
@@ -123,7 +121,12 @@ class WorldCupSlackReporter:
                 status += self.get_info(match, [0, 4, 0, 1, 2])
             except Exception:
                 status = status
+            try:
+                status += self.get_info(match, [0, 4, 0, 3, 0])
+            except Exception:
+                status = status
             status = status.lower()
+            print(status)
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
