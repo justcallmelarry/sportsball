@@ -1,11 +1,10 @@
+from bs4 import BeautifulSoup as BS
 from datetime import datetime, timedelta
 import aiohttp
 import asyncio
 import json
 import logging
 import os
-import time
-from bs4 import BeautifulSoup as BS
 import random
 
 
@@ -41,6 +40,8 @@ class WorldCupSlackReporter:
         if response[1] != 200:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
         the_page = BS(response[0], 'html.parser')
+        with open(os.path.join(self.filepath, 'html', f'{datetime.now()}.html'), 'w') as logfile:
+            logfile.write(response[0].decode('utf8'))
         return the_page
 
     @staticmethod
@@ -79,7 +80,7 @@ class WorldCupSlackReporter:
             except Exception as e:
                 started = True
                 when = ('Today', 'Already started')
-            if when[0] not in ('Idag', 'Today'):
+            if when[0] not in ('Idag', 'Today', 'Tomorrow', 'Imorgon'):
                 continue
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if when[1] != 'Already started' else when[1]
             match_id = hteam + ateam
@@ -115,11 +116,11 @@ class WorldCupSlackReporter:
                 continue
             local_matches.append(match_id)
             try:
-                status = match.contents[0].contents[4].contents[0].contents[1].contents[0].text
+                status = self.get_info(match, [0, 4, 0, 1, 0])
             except Exception:
                 status = ''
             try:
-                status += match.contents[0].contents[4].contents[0].contents[1].contents[2].text
+                status += self.get_info(match, [0, 4, 0, 1, 2])
             except Exception:
                 status = status
             status = status.lower()

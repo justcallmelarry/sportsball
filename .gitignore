@@ -1,2 +1,5 @@
 *.json
 *.log
+test*
+.DS_Store
+__pycache__
