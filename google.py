@@ -25,7 +25,7 @@ class WorldCupSlackReporter:
         self.filepath = os.path.abspath(os.path.dirname(__file__))
         self.slack_instances = []
         self.slack_payload = None
-        self.update_rate = 90
+        self.update_rate = 60
 
         self.matches = {}
         self.event_types = {
@@ -65,6 +65,7 @@ class WorldCupSlackReporter:
         matches = page.findAll('div', class_='imspo_mt__mtc-no')
         message = 'Today\'s matches:\n'
         for match in matches:
+            started = False
             match = match.contents[0]
             hteam = self.get_info(match, [2, 1, 1, 0])
             ateam = self.get_info(match, [4, 1, 1, 0])
@@ -73,6 +74,7 @@ class WorldCupSlackReporter:
                 when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
                 when = when[0].text, when[1].text
             except Exception as e:
+                started = True
                 when = ('Today', 'Already started')
             if when[0] not in ('Idag', 'Today'):
                 continue
@@ -82,8 +84,8 @@ class WorldCupSlackReporter:
                 self.matches[match_id] = {
                     'score': '0 - 0',
                     'event_ids': [],
-                    'status': 0,
-                    'time': None,
+                    'status': 0 if not started else 1,
+                    'time': None if not started else time.time(),
                     'half-time': False
                 }
             message += f'{start_time}: {hteam} vs {ateam} ({match_type})\n'
@@ -128,14 +130,13 @@ class WorldCupSlackReporter:
                 message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
 
-            # if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
-            #     message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-            #     self.matches[match_id]['status'] = 2
-            # if self.matches.get(match_id).get('status') == 1:
-            #     timediff = time.time() - self.matches.get(match_id).get('time')
-            #     if timediff > 9000:
-            #         message += f'Match (probably) ended (2h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
-            #         self.matches[match_id]['status'] = 2
+            if any(x in status.lower() for x in ('ended', 'full-time', 'ft')):
+                message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                self.matches[match_id]['status'] = 2
+            timediff = time.time() - self.matches.get(match_id).get('time')
+            if timediff > 9000:
+                message += f'Match (probably) ended (2.5h since start)! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
