@@ -15,6 +15,7 @@ class WorldCupSlackReporter:
 
         self.schedule_url = 'https://www.google.se/search?q=world+cup+schedule'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        self.hours_to_add = 0
 
         self.sem = asyncio.Semaphore(5)
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False))
@@ -64,6 +65,7 @@ class WorldCupSlackReporter:
             when = when[0].text, when[1].text
             if when[0] in ('Idag', 'Today'):
                 continue
+            start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M')
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
@@ -74,7 +76,7 @@ class WorldCupSlackReporter:
                     'time': None,
                     'half-time': False
                 }
-            message += f'{when[1]}: {hteam} vs {ateam}\n'
+            message += f'{start_time}: {hteam} vs {ateam}\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
@@ -150,6 +152,7 @@ async def main():
         settings = json.loads(settings_file.read())
         WCS.slack_instances = settings.get('slack_instances')
         WCS.slack_payload = settings.get('slack_payload')
+        WCS.hours_to_add = settings.get('hours_to_add')
     await WCS.get_todays_matches()
     await asyncio.sleep(5)
     await WCS.session.close()
