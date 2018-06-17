@@ -50,6 +50,12 @@ class WorldCupSlackReporter:
         the_page = BS(response[0], 'html.parser')
         return the_page
 
+    @staticmethod
+    def get_info(match, conlist):
+        for i in conlist:
+            match = match.contents[i]
+        return match.text
+
     async def get_todays_matches(self):
         try:
             page = await self.url_get(self.schedule_url)
@@ -59,11 +65,13 @@ class WorldCupSlackReporter:
         matches = page.findAll('div', class_='imspo_mt__mtc-no')
         message = 'Today\'s matches:\n'
         for match in matches:
-            hteam = match.contents[0].contents[2].contents[1].contents[1].contents[0].text
-            ateam = match.contents[0].contents[4].contents[1].contents[1].contents[0].text
-            when = match.contents[0].contents[0].contents[4].contents[0].contents[0].contents[0].contents
+            match = match.contents[0]
+            hteam = self.get_info(match, [2, 1, 1, 0])
+            ateam = self.get_info(match, [4, 1, 1, 0])
+            match_type = self.get_info(match, [1, 0, 0, 2])
+            when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
             when = when[0].text, when[1].text
-            if when[0] in ('Idag', 'Today'):
+            if when[0] not in ('Idag', 'Today'):
                 continue
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M')
             match_id = hteam + ateam
@@ -76,7 +84,7 @@ class WorldCupSlackReporter:
                     'time': None,
                     'half-time': False
                 }
-            message += f'{start_time}: {hteam} vs {ateam}\n'
+            message += f'{start_time}: {hteam} vs {ateam} ({match_type})\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
@@ -85,11 +93,12 @@ class WorldCupSlackReporter:
         except ConnectionError as e:
             self.logger.error(e)
             return
-        matches = page.findAll('div', class_='imso-loa imso-ani liveresults-sports-immersive__match-list-item')
+        matches = page.findAll('div', class_='imspo_mt__mtc-no')
         for match in matches:
+            match = match.contents[0]
             message = ''
-            hteam = match.contents[0].contents[2].contents[1].contents[1].contents[0].text
-            ateam = match.contents[0].contents[4].contents[1].contents[1].contents[0].text
+            hteam = self.get_info(match, [2, 1, 1, 0])
+            ateam = self.get_info(match, [4, 1, 1, 0])
             match_id = hteam + ateam
 
             status = None
@@ -103,6 +112,7 @@ class WorldCupSlackReporter:
             if ateamgoals < self.matches.get(match_id).get('goals').get('a'):
                 ateamgoals = self.matches.get(match_id).get('goals').get('a')
 
+            return
             if status == 'live' and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} vs {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
