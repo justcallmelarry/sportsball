@@ -19,7 +19,7 @@ You will need a `settings.json` file with the following information (located in 
     "link_names": 1
   },
   "football-data-token": "token",
-  "hours_to_add": 0
+  "hours_to_add": 0 //this is if you're running it on a server that does not have the same time zone as your local time
 }
 ```
 _More instances of slack are supported, just add more dicts with webhook and channel_
