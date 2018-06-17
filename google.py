@@ -1,4 +1,3 @@
-from dateutil import parser
 from datetime import datetime, timedelta
 import aiohttp
 import asyncio
@@ -7,6 +6,7 @@ import logging
 import os
 import time
 from bs4 import BeautifulSoup as BS
+import random
 
 
 class WorldCupSlackReporter:
@@ -25,7 +25,6 @@ class WorldCupSlackReporter:
         self.filepath = os.path.abspath(os.path.dirname(__file__))
         self.slack_instances = []
         self.slack_payload = None
-        self.update_rate = 60
 
         self.matches = {}
         self.event_types = {
@@ -146,7 +145,7 @@ class WorldCupSlackReporter:
 
     async def monitor(self):
         asyncio.ensure_future(self.get_current_matches())
-        await asyncio.sleep(self.update_rate)
+        await asyncio.sleep(random.choice(range(55, 87)))
         asyncio.ensure_future(self.monitor())
 
     async def _slack_output(self, message):
