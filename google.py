@@ -116,6 +116,8 @@ class WorldCupSlackReporter:
                 status += match.contents[0].contents[4].contents[0].contents[1].contents[2].text
             except Exception:
                 status = status
+            status = status.lower()
+            print(status)
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
@@ -126,7 +128,7 @@ class WorldCupSlackReporter:
             if self.matches.get(match_id).get('status') in (0, 2):
                 continue
 
-            if any(x in status.lower() for x in ('half-time', 'halvtid', 'ht')) and not self.matches.get(match_id).get('half-time'):
+            if any(x in status for x in ('half-time', 'halvtid', 'ht')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
 
@@ -134,7 +136,7 @@ class WorldCupSlackReporter:
                 message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
 
-            if any(x in status.lower() for x in ('ended', 'full-time', 'ft')):
+            if any(x in status for x in ('ended', 'full-time', 'ft')):
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             timediff = time.time() - self.matches.get(match_id).get('time')
