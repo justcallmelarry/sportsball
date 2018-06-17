@@ -128,7 +128,7 @@ class WorldCupSlackReporter:
             if self.matches.get(match_id).get('status') in (0, 2):
                 continue
 
-            if any(x in status for x in ('half-time', 'halvtid', 'ht')) and not self.matches.get(match_id).get('half-time'):
+            if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
 
