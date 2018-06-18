@@ -55,7 +55,7 @@ class WorldCupSlackReporter:
         matches = page.findAll('div', class_='imspo_mt__mtc-no')
         message = 'Today\'s matches:\n'
         for match in matches:
-            started = False
+            status = 0
             match = match.contents[0]
             hteam = self.get_info(match, [2, 1, 1, 0])
             hteamgoals = self.get_info(match, [2, 1, 0])
@@ -74,8 +74,8 @@ class WorldCupSlackReporter:
                 when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
                 when = when[0].text, when[1].text
             except Exception as e:
-                started = True
                 when = ('Today', 'Already started') if 'ft' not in self.get_info(match, [0, 4, 0]).lower() else ('Today', 'Already ended')
+                status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if 'Already' not in when[1] else when[1]
@@ -84,12 +84,12 @@ class WorldCupSlackReporter:
                 self.matches[match_id] = {
                     'score': f'{hteamgoals} - {ateamgoals}',
                     'event_ids': [],
-                    'status': 0 if not started else 1,
+                    'status': status,
                     'hteam': hteam,
                     'ateam': ateam,
                     'half-time': False
                 }
-            message += f'{start_time}: {hteam} vs {ateam} ({match_type})\n'
+            message += f'*{start_time}*: {hteam} vs {ateam} ({match_type})\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
