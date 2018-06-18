@@ -107,6 +107,14 @@ class WorldCupSlackReporter:
             hteamgoals = self.get_info(match, [2, 1, 0])
             ateam = self.get_info(match, [4, 1, 1, 0])
             ateamgoals = self.get_info(match, [4, 1, 0])
+            try:
+                int(hteamgoals)
+            except Exception:
+                hteamgoals = '0'
+            try:
+                int(ateamgoals)
+            except Exception:
+                ateamgoals = '0'
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
