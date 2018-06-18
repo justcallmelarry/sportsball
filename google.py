@@ -75,10 +75,10 @@ class WorldCupSlackReporter:
                 when = when[0].text, when[1].text
             except Exception as e:
                 started = True
-                when = ('Today', 'Already started')
+                when = ('Today', 'Already started') if 'ft' not in self.get_info(match, [0, 4, 0]).lower() else ('Today', 'Already ended')
             if when[0] not in ('Idag', 'Today'):
                 continue
-            start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if when[1] != 'Already started' else when[1]
+            start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if 'Already' not in when[1] else when[1]
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
@@ -178,7 +178,7 @@ async def main():
         settings = json.loads(settings_file.read())
         WCS.slack_instances = settings.get('slack_instances')
         WCS.slack_payload = settings.get('slack_payload')
-        WCS.hours_to_add = settings.get('hours_to_add')
+        WCS.hours_to_add = settings.get('hours_to_add') if settings.get('hours_to_add') else 0
     await WCS.get_todays_matches()
     await asyncio.sleep(WCS.sleep)
     asyncio.ensure_future(WCS.monitor())
