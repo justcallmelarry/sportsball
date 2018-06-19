@@ -28,6 +28,11 @@ class WorldCupSlackReporter:
         self.slack_payload = None
 
     async def url_get(self, url):
+        '''
+        a normal web page download, with headers to make us look like a normal browser
+        the response i checked, and if not OK raises an exception
+        if all is OK, return a beautifulsoup'd page
+        '''
         async def _get(url):
             try:
                 async with self.sem, self.session.get(url, headers=self.headers) as response:
@@ -43,6 +48,9 @@ class WorldCupSlackReporter:
 
     @staticmethod
     def emojify(phrase):
+        '''
+        EMOJIFY ALL THE THINGS!
+        '''
         emojis = {
             '08:00': ':clock8:', '09:00': ':clock9:', '10:00': ':clock10:',
             '11:00': ':clock11:', '12:00': ':clock12:', '13:00': ':clock1:',
@@ -72,19 +80,28 @@ class WorldCupSlackReporter:
 
     @staticmethod
     def get_info(match, conlist):
+        '''
+        in order to not have to type .contents[] a hundred times
+        '''
         for i in conlist:
             match = match.contents[i]
         return match
 
     @staticmethod
     def goalfixer(goal):
+        '''
+        checks that there is a number present or returns 0
+        '''
         try:
             goal = int(goal)
         except Exception:
-            return '0'
+            return 0
         return goal
 
     def status(self, text, match, conlist):
+        '''
+        adds text to status if present, else just returns text
+        '''
         try:
             text += self.get_info(match, conlist).text.lower()
         except Exception:
@@ -92,6 +109,10 @@ class WorldCupSlackReporter:
         return text
 
     async def get_todays_matches(self):
+        '''
+        set up all of todays matches
+        preferably run in the morning to give everyone a schedule to look forward to
+        '''
         try:
             page = await self.url_get(self.today_url)
         except ConnectionError as e:
@@ -142,6 +163,9 @@ class WorldCupSlackReporter:
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
+        '''
+        main logic for getting updates in ongoing matches
+        '''
         try:
             page = await self.url_get(self.today_url)
         except ConnectionError as e:
@@ -198,11 +222,18 @@ class WorldCupSlackReporter:
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
+        '''
+        assure that current matches are scraped regularily
+        scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspisius acitivity
+        '''
         asyncio.ensure_future(self.get_current_matches())
         await asyncio.sleep(random.choice(range(55, 87)))
         asyncio.ensure_future(self.monitor())
 
     async def _slack_output(self, message):
+        '''
+        sends message to all the slack clients
+        '''
         async def _send(url, output):
             try:
                 async with self.sem, self.session.post(url, data=output) as response:
@@ -217,6 +248,11 @@ class WorldCupSlackReporter:
 
 
 async def main(file):
+    '''
+    just starts up the class and makes it run forever
+    feel free to use the class in other ways if preferred
+    you can specify another settings file than settings.json as an argument, for testing purposes
+    '''
     WCS = WorldCupSlackReporter()
     if not file:
         with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
