@@ -165,7 +165,7 @@ class WorldCupSlackReporter:
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
-                message += f':repeat: {hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
+                message += f'{hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
 
             if self.matches.get(match_id).get('status') in (0, 2):
@@ -173,14 +173,14 @@ class WorldCupSlackReporter:
 
             if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
-                message += f':timer_clock: Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                message += f'Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
 
             if score != self.matches.get(match_id).get('score'):
-                message += f':goal_net: GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['score'] = score
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
-                message += f':checkered_flag: Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                message += f'Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
