@@ -6,11 +6,12 @@ import json
 import logging
 import os
 import random
+import sys
 
 
 class WorldCupSlackReporter:
     def __init__(self):
-        self.today_url = 'https://www.google.se/search?q=world+cup+today'
+        self.today_url = 'https://www.google.se/search?q=world+cup+today&lang=en'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         self.hours_to_add = 0
         self.matches = {}
@@ -39,6 +40,35 @@ class WorldCupSlackReporter:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
         the_page = BS(response[0], 'html.parser')
         return the_page
+
+    @staticmethod
+    def emojify(phrase):
+        emojis = {
+            '08:00': ':clock8:', '09:00': ':clock9:', '10:00': ':clock10:',
+            '11:00': ':clock11:', '12:00': ':clock12:', '13:00': ':clock1:',
+            '14:00': ':clock2:', '15:00': ':clock3:', '16:00': ':clock4:',
+            '17:00': ':clock5:', '18:00': ':clock6:', '19:00': ':clock7:',
+            '20:00': ':clock8:', '21:00': ':clock9:', '22:00': ':clock10:',
+            'Already started': ':repeat:', 'Already ended': ':checkered_flag:',
+            'Russia': ':flag-ru:', 'Saudi Arabia': ':flag-sa:',
+            'Egypt': ':flag-eg:', 'Uruguay': ':flag-uy:',
+            'Morocco': ':flag-ma:', 'Iran': ':flag-ir:',
+            'Portugal': ':flag-pt:', 'Spain': ':flag-es:',
+            'France': ':flag-fr:', 'Australia': ':flag-au:',
+            'Argentina': ':flag-ar:', 'Iceland': ':flag-is:',
+            'Peru': ':flag-pe:', 'Denmark': ':flag-dk:',
+            'Croatia': ':flag-hr:', 'Costa Rica': 'flag-cr',
+            'Serbia': ':flag-rs:', 'Germany': 'flag-de',
+            'Mexico': ':flag-mx:', 'Brazil': ':flag-br:',
+            'Switzerland': ':flag-ch:', 'Sweden': ':flag-se:',
+            'South Korea': ':flag-kr:', 'Belguim': ':flag-be:',
+            'Panama': ':flag-pa:', 'Tunisia': ':flag-tn:',
+            'England': ':flag-england:', 'Colombia': ':flag-co:',
+            'Japan': ':flag-jp:', 'Poland': ':flag-pl:',
+            'Senegal': ':flag-sn:'
+
+        }
+        return emojis.get(phrase, ':question:')
 
     @staticmethod
     def get_info(match, conlist):
@@ -89,7 +119,7 @@ class WorldCupSlackReporter:
                     'ateam': ateam,
                     'half-time': False
                 }
-            message += f'*{start_time}*: {hteam} vs {ateam} ({match_type})\n'
+            message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)} vs {self.emojify(ateam)}  {ateam} ({match_type})\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
@@ -135,7 +165,7 @@ class WorldCupSlackReporter:
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
-                message += f'{hteam} vs {ateam} just started!\n'
+                message += f':repeat: {hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
 
             if self.matches.get(match_id).get('status') in (0, 2):
@@ -143,23 +173,16 @@ class WorldCupSlackReporter:
 
             if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
-                message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
+                message += f':timer_clock: Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
 
             if score != self.matches.get(match_id).get('score'):
-                message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                message += f':goal_net: GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['score'] = score
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
-                message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                message += f':checkered_flag: Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['status'] = 2
             asyncio.ensure_future(self._slack_output(message.rstrip()))
-
-        for key, value in self.matches.items():
-            if value.get('status') in (0, 2):
-                continue
-            if key not in local_matches:
-                asyncio.ensure_future(self._slack_output(f'Match ended! Final score:\n{value.get("hteam")} {score} {value.get("ateam")}'))
-                self.matches[key]['status'] = 2
 
     async def monitor(self):
         asyncio.ensure_future(self.get_current_matches())
@@ -180,20 +203,28 @@ class WorldCupSlackReporter:
             asyncio.ensure_future(_send(si.get('webhook'), json.dumps(output)))
 
 
-async def main():
+async def main(file):
     WCS = WorldCupSlackReporter()
-    with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
-        settings = json.loads(settings_file.read())
-        WCS.slack_instances = settings.get('slack_instances')
-        WCS.slack_payload = settings.get('slack_payload')
-        WCS.hours_to_add = settings.get('hours_to_add') if settings.get('hours_to_add') else 0
+    if not file:
+        with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
+            settings = json.loads(settings_file.read())
+    else:
+        with open(file, 'r') as settings_file:
+            settings = json.loads(settings_file.read())
+    WCS.slack_instances = settings.get('slack_instances')
+    WCS.slack_payload = settings.get('slack_payload')
+    WCS.hours_to_add = settings.get('hours_to_add') if settings.get('hours_to_add') else 0
     await WCS.get_todays_matches()
     await asyncio.sleep(WCS.sleep)
     asyncio.ensure_future(WCS.monitor())
 
 
 if __name__ == '__main__':
+    try:
+        file = sys.argv[1]
+    except Exception:
+        file = None
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    loop.run_until_complete(main(file))
     loop.run_forever()
     loop.close()
