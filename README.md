@@ -11,6 +11,40 @@ You will need a `settings.json` file with the following information (located in 
     {
       "webhook": "https://hooks.slack.com/services/your/webhook/here",
       "channel": "#wc2018"
+      "players": {
+            "Argentina": "Jason",
+            "Australia": "Euan",
+            "Belgium": "Ian",
+            "Brazil": "Cara",
+            "Colombia": "James",
+            "Costa Rica": "Mel",
+            "Croatia": "Scott T",
+            "Denmark": "Cathy",
+            "Egypt": "PSH",
+            "England": "Jane",
+            "France": "Deri",
+            "Germany": "Glen",
+            "Iceland": "Bruce",
+            "Iran": "Tim",
+            "Japan": "Chris",
+            "Mexico": "Debbie",
+            "Morocco": "Jaz",
+            "Nigeria": "Matt",
+            "Panama": "Frank",
+            "Peru": "Tom F",
+            "Poland": "Mike",
+            "Portugal": "Helen",
+            "Russia": "JSH",
+            "Saudi Arabia": "Rowan",
+            "Senegal": "Tom W",
+            "Serbia": "Jake",
+            "South Korea": "Nick",
+            "Spain": "Jakub",
+            "Sweden": "Renee",
+            "Switzerland": "Russ",
+            "Tunisia": "Neil",
+            "Uruguay": "Gill"
+        }
     }
   ],
   "slack_payload": {
