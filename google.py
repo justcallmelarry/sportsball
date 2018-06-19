@@ -244,7 +244,8 @@ class WorldCupSlackReporter:
         for si in self.slack_instances:
             output = dict(self.slack_payload)
             for country,name in si.get('players').items():
-                message = message.replace(country,country+" ("+name+")")
+                newtext = "%s (%s)"%(country,name) 
+                message = message.replace(country, newtext)
             output['text'] = message
             output['channel'] = si.get('channel')
             asyncio.ensure_future(_send(si.get('webhook'), json.dumps(output)))
