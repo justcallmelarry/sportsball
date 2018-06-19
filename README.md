@@ -9,6 +9,7 @@ This, however, means that I am spending little to no time on the other updaters,
 
 ### Setup
 You will need a `settings.json` file with the following information (located in the same folder):
+(See settings.json.example)
 ```
 {
   "slack_instances": [
