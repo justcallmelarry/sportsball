@@ -50,6 +50,7 @@ class WorldCupSlackReporter:
     def emojify(phrase):
         '''
         EMOJIFY ALL THE THINGS!
+        yeah i know the dict looks like poo poo, but now at least it doesnt take up 50 rows
         '''
         emojis = {
             '08:00': ':clock8:', '09:00': ':clock9:', '10:00': ':clock10:',
