@@ -28,6 +28,11 @@ class WorldCupSlackReporter:
         self.slack_payload = None
 
     async def url_get(self, url):
+        '''
+        a normal web page download, with headers to make us look like a normal browser
+        the response i checked, and if not OK raises an exception
+        if all is OK, return a beautifulsoup'd page
+        '''
         async def _get(url):
             try:
                 async with self.sem, self.session.get(url, headers=self.headers) as response:
@@ -43,6 +48,9 @@ class WorldCupSlackReporter:
 
     @staticmethod
     def emojify(phrase):
+        '''
+        EMOJIFY ALL THE THINGS!
+        '''
         emojis = {
             '08:00': ':clock8:', '09:00': ':clock9:', '10:00': ':clock10:',
             '11:00': ':clock11:', '12:00': ':clock12:', '13:00': ':clock1:',
@@ -72,11 +80,39 @@ class WorldCupSlackReporter:
 
     @staticmethod
     def get_info(match, conlist):
+        '''
+        in order to not have to type .contents[] a hundred times
+        '''
         for i in conlist:
             match = match.contents[i]
-        return match.text
+        return match
+
+    @staticmethod
+    def goalfixer(goal):
+        '''
+        checks that there is a number present or returns 0
+        '''
+        try:
+            goal = int(goal)
+        except Exception:
+            return 0
+        return goal
+
+    def status(self, text, match, conlist):
+        '''
+        adds text to status if present, else just returns text
+        '''
+        try:
+            text += self.get_info(match, conlist).text.lower()
+        except Exception:
+            text = text
+        return text
 
     async def get_todays_matches(self):
+        '''
+        set up all of todays matches
+        preferably run in the morning to give everyone a schedule to look forward to
+        '''
         try:
             page = await self.url_get(self.today_url)
         except ConnectionError as e:
@@ -87,24 +123,16 @@ class WorldCupSlackReporter:
         for match in matches:
             status = 0
             match = match.contents[0]
-            hteam = self.get_info(match, [2, 1, 1, 0])
-            hteamgoals = self.get_info(match, [2, 1, 0])
-            ateam = self.get_info(match, [4, 1, 1, 0])
-            ateamgoals = self.get_info(match, [4, 1, 0])
-            match_type = self.get_info(match, [1, 0, 0, 2])
+            hteam = self.get_info(match, [2, 1, 1, 0]).text
+            hteamgoals = self.goalfixer(self.get_info(match, [2, 1, 0]).text)
+            ateam = self.get_info(match, [4, 1, 1, 0]).text
+            ateamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
+            match_type = self.get_info(match, [1, 0, 0, 2]).text
             try:
-                int(hteamgoals)
-            except Exception:
-                hteamgoals = '0'
-            try:
-                int(ateamgoals)
-            except Exception:
-                ateamgoals = '0'
-            try:
-                when = match.contents[0].contents[4].contents[0].contents[0].contents[0].contents
+                when = self.get_info(match, [0, 4, 0, 0, 0]).contents
                 when = when[0].text, when[1].text
             except Exception as e:
-                when = ('Today', 'Already started') if 'ft' not in self.get_info(match, [0, 4, 0]).lower() else ('Today', 'Already ended')
+                when = ('Today', 'Already started') if 'ft' not in self.status('', match, [0, 4, 0]) else ('Today', 'Already ended')
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
@@ -113,17 +141,31 @@ class WorldCupSlackReporter:
             if match_id not in self.matches:
                 self.matches[match_id] = {
                     'score': f'{hteamgoals} - {ateamgoals}',
+                    'goalcount': hteamgoals + ateamgoals,
                     'event_ids': [],
                     'status': status,
                     'hteam': hteam,
                     'ateam': ateam,
-                    'half-time': False
+                    'half-time': False,
+                    'redflag': {
+                        'h': False,
+                        'a': False
+                    }
                 }
+            hinfo = self.get_info(match, [2, 1, 1, 0, 2, 0])
+            ainfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
+                self.matches[match_id]['redflag']['h'] = True
+            if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
+                self.matches[match_id]['redflag']['a'] = True
             add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
+        '''
+        main logic for getting updates in ongoing matches
+        '''
         try:
             page = await self.url_get(self.today_url)
         except ConnectionError as e:
@@ -134,35 +176,26 @@ class WorldCupSlackReporter:
         for match in matches:
             match = match.contents[0]
             message = ''
-            hteam = self.get_info(match, [2, 1, 1, 0])
-            hteamgoals = self.get_info(match, [2, 1, 0])
-            ateam = self.get_info(match, [4, 1, 1, 0])
-            ateamgoals = self.get_info(match, [4, 1, 0])
-            try:
-                int(hteamgoals)
-            except Exception:
-                hteamgoals = '0'
-            try:
-                int(ateamgoals)
-            except Exception:
-                ateamgoals = '0'
+            hteam = self.get_info(match, [2, 1, 1, 0]).text
+            hteamgoals = self.goalfixer(self.get_info(match, [2, 1, 0]).text)
+            ateam = self.get_info(match, [4, 1, 1, 0]).text
+            ateamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
             local_matches.append(match_id)
-            try:
-                status = self.get_info(match, [0, 4, 0, 1, 0])
-            except Exception:
-                status = ''
-            try:
-                status += self.get_info(match, [0, 4, 0, 1, 2])
-            except Exception:
-                status = status
-            try:
-                status += self.get_info(match, [0, 4, 0, 3, 0])
-            except Exception:
-                status = status
-            status = status.lower()
+            status = ''
+            status = self.status(status, match, [0, 4, 0, 1, 0])
+            status += self.status(status, match, [0, 4, 0, 1, 2])
+            status += self.status(status, match, [0, 4, 0, 3, 0])
+            hinfo = self.get_info(match, [2, 1, 1, 0, 2, 0])
+            ainfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
+                message += f'{hteam} just received a red card!\n'
+                self.matches[match_id]['redflag']['h'] = True
+            if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
+                message += f'{ateam} just received a red card!\n'
+                self.matches[match_id]['redflag']['a'] = True
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
@@ -178,6 +211,9 @@ class WorldCupSlackReporter:
 
             if score != self.matches.get(match_id).get('score'):
                 message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                if (hteamgoals + ateamgoals) < self.matches.get(match_id).get('goalcount'):
+                    message.replace('GOOOOOOOAL!', 'Score update:')
+                self.matches[match_id]['goalcount'] = hteamgoals + ateamgoals
                 self.matches[match_id]['score'] = score
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
@@ -186,11 +222,18 @@ class WorldCupSlackReporter:
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
+        '''
+        assure that current matches are scraped regularily
+        scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspisius acitivity
+        '''
         asyncio.ensure_future(self.get_current_matches())
         await asyncio.sleep(random.choice(range(55, 87)))
         asyncio.ensure_future(self.monitor())
 
     async def _slack_output(self, message):
+        '''
+        sends message to all the slack clients
+        '''
         async def _send(url, output):
             try:
                 async with self.sem, self.session.post(url, data=output) as response:
@@ -207,6 +250,11 @@ class WorldCupSlackReporter:
 
 
 async def main(file):
+    '''
+    just starts up the class and makes it run forever
+    feel free to use the class in other ways if preferred
+    you can specify another settings file than settings.json as an argument, for testing purposes
+    '''
     WCS = WorldCupSlackReporter()
     if not file:
         with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
