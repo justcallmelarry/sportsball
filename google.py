@@ -120,7 +120,7 @@ class WorldCupSlackReporter:
                     'half-time': False
                 }
             add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
-            message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)}  {ateam} ({match_type})\n'
+            message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
