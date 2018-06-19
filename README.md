@@ -19,32 +19,7 @@ You will need a `settings.json` file with the following information (located in 
             "Argentina": "Jason",
             "Australia": "Euan",
             "Belgium": "Ian",
-            "Brazil": "Cara",
-            "Colombia": "James",
-            "Costa Rica": "Mel",
-            "Croatia": "Scott T",
-            "Denmark": "Cathy",
-            "Egypt": "PSH",
-            "England": "Jane",
-            "France": "Deri",
-            "Germany": "Glen",
-            "Iceland": "Bruce",
-            "Iran": "Tim",
-            "Japan": "Chris",
-            "Mexico": "Debbie",
-            "Morocco": "Jaz",
-            "Nigeria": "Matt",
-            "Panama": "Frank",
-            "Peru": "Tom F",
-            "Poland": "Mike",
-            "Portugal": "Helen",
-            "Russia": "JSH",
-            "Saudi Arabia": "Rowan",
-            "Senegal": "Tom W",
-            "Serbia": "Jake",
-            "South Korea": "Nick",
-            "Spain": "Jakub",
-            "Sweden": "Renee",
+            ...
             "Switzerland": "Russ",
             "Tunisia": "Neil",
             "Uruguay": "Gill"
@@ -61,6 +36,8 @@ You will need a `settings.json` file with the following information (located in 
 }
 ```
 _More instances of slack are supported, just add more dicts with webhook and channel_
+
+_Optionally, a players array can be added to slack_instance. Countries will then be substitutes for the country name followed by the name in brackets in the Slack message_
 
 Requires: python 3.6
 
