@@ -16,7 +16,7 @@ You will need a `settings.json` file with the following information (located in 
     {
       "webhook": "https://hooks.slack.com/services/your/webhook/here",
       "channel": "#wc2018"
-      "players": {
+      "participants": {
             "Argentina": "Jason",
             "Australia": "Euan",
             "Belgium": "Ian",
@@ -38,7 +38,7 @@ You will need a `settings.json` file with the following information (located in 
 ```
 _More instances of slack are supported, just add more dicts with webhook and channel_
 
-_Optionally, a players array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
+_Optionally, a participants array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
 
 Requires: python 3.6
 

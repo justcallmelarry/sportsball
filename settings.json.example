@@ -3,7 +3,7 @@
         {
             "channel": "#wc2018",
             "webhook": "https://hooks.slack.com/services/XXXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX",
-            "players": {
+            "participants": {
                 "Argentina": "Jason",
                 "Australia": "Euan",
                 "Belgium": "Ian",
