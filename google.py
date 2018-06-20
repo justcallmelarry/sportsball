@@ -11,7 +11,7 @@ import sys
 
 class WorldCupSlackReporter:
     def __init__(self):
-        self.today_url = 'https://www.google.se/search?q=world+cup+today&lang=en'
+        self.today_url = 'https://www.google.se/search?q=world+cup+today&hl=en'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         self.hours_to_add = 0
         self.matches = {}
