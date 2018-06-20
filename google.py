@@ -244,7 +244,7 @@ class WorldCupSlackReporter:
         for si in self.slack_instances:
             output = dict(self.slack_payload)
             if si.get('participants'):
-                for country,name in si.get('participants').items():
+                for country, name in si.get('participants').items():
                     newtext = f'{country} ({name})' 
                     message = message.replace(country, newtext)
             output['text'] = message
