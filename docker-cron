@@ -1,3 +1,3 @@
 CRON_TZ=Europe/Stockholm
-0 9 * * * screen -d -m python /home/[user]]/[path_to_folder]]/sportsball/google.py
+0 9 * * * screen -d -m python /home/[user]/[path_to_folder]/sportsball/google.py
 59 23 * * * killall screen
