@@ -213,7 +213,7 @@ class WorldCupSlackReporter:
             if score != self.matches.get(match_id).get('score'):
                 message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 if (hteamgoals + ateamgoals) <= self.matches.get(match_id).get('goalcount'):
-                    message.replace('GOOOOOOOAL!', 'Score update:')
+                    message = message.replace('GOOOOOOOAL!', 'Score update:')
                 self.matches[match_id]['goalcount'] = hteamgoals + ateamgoals
                 self.matches[match_id]['score'] = score
 
