@@ -45,5 +45,5 @@
         "username": "Sportsball"
     },
   "football-data-token": "token",
-  "hours_to_add": 0 // test
+  "hours_to_add": 0
 }
