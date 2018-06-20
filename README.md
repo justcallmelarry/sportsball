@@ -9,12 +9,22 @@ This, however, means that I am spending little to no time on the other updaters,
 
 ### Setup
 You will need a `settings.json` file with the following information (located in the same folder):
+(See settings.json.example)
 ```
 {
   "slack_instances": [
     {
       "webhook": "https://hooks.slack.com/services/your/webhook/here",
       "channel": "#wc2018"
+      "participants": {
+            "Argentina": "Jason",
+            "Australia": "Euan",
+            "Belgium": "Ian",
+            ...
+            "Switzerland": "Russ",
+            "Tunisia": "Neil",
+            "Uruguay": "Gill"
+        }
     }
   ],
   "slack_payload": {
@@ -27,6 +37,8 @@ You will need a `settings.json` file with the following information (located in 
 }
 ```
 _More instances of slack are supported, just add more dicts with webhook and channel_
+
+_Optionally, a participants array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
 
 Requires: python 3.6
 
