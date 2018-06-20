@@ -9,7 +9,8 @@ This, however, means that I am spending little to no time on the other updaters,
 
 ### Setup
 You will need a `settings.json` file with the following information (located in the same folder):
-(See settings.json.example)
+
+_(See settings.json.example)_
 ```
 {
   "slack_instances": [
@@ -44,7 +45,13 @@ Requires: python 3.6
 
 Modules not installed by deafult:
 * aiohttp
+* bs4
 * dateutil (python-dateutil)
+
+### Docker
+Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings.json`-file with the correct information_.
+The Dockerfile will start an instance and add the `crontab.example`-file as a cron-file, which by default sets the cron timezone to Stockholm and adds a start and a stop to the screen running the google scraper.
+It also starts the google scraper when run. Remove the last CMD in the docker file to avoid this.
 
 
 ### How it works:
