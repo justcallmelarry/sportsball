@@ -80,6 +80,21 @@ class WorldCupSlackReporter:
         return emojis.get(phrase, ':question:')
 
     @staticmethod
+    def calc_seconds(timestring):
+        try:
+            hour = int(timestring[:2])
+            minute = int(timestring[-2:])
+        except Exception:
+            return 5
+        now = datetime.now()
+        target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if target < now:  # if the target is before now, add one day
+            target += timedelta(days=1)
+        diff = target - now
+        diff -= timedelta(seconds=600)
+        return diff.seconds
+
+    @staticmethod
     def get_info(match, conlist):
         '''
         in order to not have to type .contents[] a hundred times
@@ -138,6 +153,7 @@ class WorldCupSlackReporter:
             if when[0] not in ('Idag', 'Today'):
                 continue
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if 'Already' not in when[1] else when[1]
+            self.sleep = min(self.sleep, self.calc_seconds(start_time))
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
@@ -227,9 +243,12 @@ class WorldCupSlackReporter:
         assure that current matches are scraped regularily
         scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspisius acitivity
         '''
-        asyncio.ensure_future(self.get_current_matches())
-        await asyncio.sleep(random.choice(range(55, 87)))
-        asyncio.ensure_future(self.monitor())
+        all_done = False
+        while not all_done:
+            asyncio.ensure_future(self.get_current_matches())
+            await asyncio.sleep(random.choice(range(55, 87)))
+            if all([x.get('status') == 2 for k, x in self.matches.items()]):
+                all_done = True
 
     async def _slack_output(self, message):
         '''
@@ -269,9 +288,10 @@ async def main(file):
     WCS.slack_payload = settings.get('slack_payload')
     WCS.hours_to_add = settings.get('hours_to_add') if settings.get('hours_to_add') else 0
     await WCS.get_todays_matches()
+    print(WCS.sleep)
     await asyncio.sleep(WCS.sleep)
-    asyncio.ensure_future(WCS.monitor())
-
+    await WCS.monitor()
+    await WCS.session.close()
 
 if __name__ == '__main__':
     try:
@@ -280,5 +300,4 @@ if __name__ == '__main__':
         file = None
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(file))
-    loop.run_forever()
     loop.close()
