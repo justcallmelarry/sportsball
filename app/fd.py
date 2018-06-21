@@ -19,7 +19,7 @@ class WorldCupSlackReporter:
         self.logger = logging.getLogger(__file__)
         self.logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        self.filepath = os.path.abspath(os.path.dirname(__file__))
+        self.project_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         self.slack_instances = []
         self.slack_payload = None
         self.update_rate = 90
@@ -44,7 +44,7 @@ class WorldCupSlackReporter:
         response = await _get(url)
         if response[1] != 200:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
-        with open(os.path.join(self.filepath, 'match-requests.log'), 'a+') as logfile:
+        with open(os.path.join(self.project_path, 'logs', 'match-requests.log'), 'a+') as logfile:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             data = json.dumps(json.loads(response[0]))
             logfile.write(f'{now}: {data}\n')
@@ -135,21 +135,3 @@ class WorldCupSlackReporter:
             output['text'] = message
             output['channel'] = si.get('channel')
             asyncio.ensure_future(_send(si.get('webhook'), json.dumps(output)))
-
-
-async def main():
-    WCS = WorldCupSlackReporter()
-    with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
-        settings = json.loads(settings_file.read())
-        WCS.slack_instances = settings.get('slack_instances')
-        WCS.slack_payload = settings.get('slack_payload')
-        WCS.headers = {'X-Auth-Token': settings.get('football-data-token')}
-    await WCS.get_todays_matches()
-    await asyncio.sleep(5)
-    asyncio.ensure_future(WCS.monitor())
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.run_forever()

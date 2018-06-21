@@ -17,7 +17,7 @@ class WorldCupSlackReporter:
         self.logger = logging.getLogger(__file__)
         self.logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        self.filepath = os.path.abspath(os.path.dirname(__file__))
+        self.project_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         self.slack_instances = []
         self.slack_payload = None
         self.update_rate = 90
@@ -42,7 +42,7 @@ class WorldCupSlackReporter:
         response = await _get(url)
         if response[1] != 200:
             raise ConnectionError(f'did not get a 200 response: {response[0]}')
-        with open(os.path.join(self.filepath, 'match-requests.log'), 'a+') as logfile:
+        with open(os.path.join(self.project_path, 'logs', 'match-requests.log'), 'a+') as logfile:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             data = json.dumps(json.loads(response[0]))
             logfile.write(f'{now}: {data}\n')
@@ -99,26 +99,24 @@ class WorldCupSlackReporter:
 
             if self.matches.get(match_id).get('status') == 2:
                 continue
-            # -- commented out since events and goals do not seem to update at the same time --
-            # for item in match.get('home_team_events'):
-            #     item['code'] = match.get('home_team').get('code')
-            # for item in match.get('away_team_events'):
-            #     item['code'] = match.get('away_team').get('code')
-            # events = match.get('home_team_events') + match.get('away_team_events')
-            # for eid in sorted(events, key=lambda x: x.get('id')):
-            #     if eid.get('id') in self.matches.get(match_id).get('event_ids'):
-            #         continue
-            #     self.matches[match_id]['event_ids'].append(eid.get('id'))
-            #     event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player')).replace('[country]', eid.get('code'))
-            #     if event_text == '':
-            #         continue
-            #     message += f'{event_text}\n'
+            for item in match.get('home_team_events'):
+                item['code'] = match.get('home_team').get('code')
+            for item in match.get('away_team_events'):
+                item['code'] = match.get('away_team').get('code')
+            events = match.get('home_team_events') + match.get('away_team_events')
+            for eid in sorted(events, key=lambda x: x.get('id')):
+                if eid.get('id') in self.matches.get(match_id).get('event_ids'):
+                    continue
+                self.matches[match_id]['event_ids'].append(eid.get('id'))
+                event_text = self.event_types.get(eid.get('type_of_event'), '').replace('[player]', eid.get('player')).replace('[country]', eid.get('code'))
+                if event_text == '':
+                    continue
+                message += f'{event_text}\n'
             if match.get('time') == 'half-time' and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
                 message += f'Half-time: {hteam} {hteamgoals} vs {ateamgoals} {ateam}\n'
             if score > self.matches.get(match_id).get('score'):
-                # message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'  # uncomment here if uncommenting events
-                message += f'GOOOOOOOAL!\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
+                message += f'Score update: {hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
                 self.matches[match_id]['score'] = score
             if match.get('status') == 'completed' or match.get('winner') or match.get('time') == 'full-time':
                 message += f'Match ended! Final score:\n{hteam} {hteamgoals} - {ateamgoals} {ateam}\n'
@@ -147,20 +145,3 @@ class WorldCupSlackReporter:
             output['text'] = message
             output['channel'] = si.get('channel')
             asyncio.ensure_future(_send(si.get('webhook'), json.dumps(output)))
-
-
-async def main():
-    WCS = WorldCupSlackReporter()
-    with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
-        settings = json.loads(settings_file.read())
-        WCS.slack_instances = settings.get('slack_instances')
-        WCS.slack_payload = settings.get('slack_payload')
-    await WCS.get_todays_matches()
-    await asyncio.sleep(5)
-    asyncio.ensure_future(WCS.monitor())
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.run_forever()

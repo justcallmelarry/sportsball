@@ -1,1 +1,0 @@
-0 7 * * * /usr/local/bin/python /usr/src/app/google.py

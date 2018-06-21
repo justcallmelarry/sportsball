@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import random
-import sys
 
 
 class WorldCupSlackReporter:
@@ -22,7 +21,7 @@ class WorldCupSlackReporter:
         self.logger = logging.getLogger(__file__)
         self.logger.setLevel(logging.INFO)
         logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        self.filepath = os.path.abspath(os.path.dirname(__file__))
+        self.project_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
         self.slack_instances = []
         self.slack_payload = None
@@ -269,35 +268,3 @@ class WorldCupSlackReporter:
             output['text'] = message
             output['channel'] = si.get('channel')
             asyncio.ensure_future(_send(si.get('webhook'), json.dumps(output)))
-
-
-async def main(file):
-    '''
-    just starts up the class and makes it run forever
-    feel free to use the class in other ways if preferred
-    you can specify another settings file than settings.json as an argument, for testing purposes
-    '''
-    WCS = WorldCupSlackReporter()
-    if not file:
-        with open(os.path.join(WCS.filepath, 'settings.json'), 'r') as settings_file:
-            settings = json.loads(settings_file.read())
-    else:
-        with open(file, 'r') as settings_file:
-            settings = json.loads(settings_file.read())
-    WCS.slack_instances = settings.get('slack_instances')
-    WCS.slack_payload = settings.get('slack_payload')
-    WCS.hours_to_add = settings.get('hours_to_add') if settings.get('hours_to_add') else 0
-    await WCS.get_todays_matches()
-    print(WCS.sleep)
-    await asyncio.sleep(WCS.sleep)
-    await WCS.monitor()
-    await WCS.session.close()
-
-if __name__ == '__main__':
-    try:
-        file = sys.argv[1]
-    except Exception:
-        file = None
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(file))
-    loop.close()
