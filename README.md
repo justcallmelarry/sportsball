@@ -4,10 +4,10 @@ A slack integration for updating start, stop, half-time and goals of WC 2018.
 
 I am personally running the script called `google.py` as it seems more reliable than the API's tested.
 It's also more basic, which is probably why the API's are having more trouble sorting the information.
-This, however, means that I am spending little to no time on the other updaters, but feel free to fork away or send me a PR if you want any updates for yourself.
+This, however, means that I am spending little to no time on the other updaters, but feel free to fork away or send me a PR if you want any updates for yourself. This also means that everything covered in this readme is concerning the `google.py`-script, and the other two are deprecated.
 
 
-### Setup
+## Setup
 You will need a `settings.json` file with the following information (located in the same folder):
 
 _(See settings.json.example)_
@@ -29,7 +29,7 @@ _(See settings.json.example)_
     }
   ],
   "slack_payload": {
-    "username": "Sportsball",
+    "username": "Sportsball",  //that's right, it can be called anything, doesn't have to be Sportsball
     "icon_emoji": ":soccer:",
     "link_names": 1
   },
@@ -47,25 +47,27 @@ Modules not installed by deafult:
 * aiohttp
 * bs4
 * dateutil (python-dateutil)
+_Can be installed via requirements.txt_
 
 ### Docker
-Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings.json`-file with the correct information_.
+Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings.json`-file with the correct information (and at least an empty crontab file)_.
 The Dockerfile will start an instance and add the `crontab`-file (use the .example to get the hint) as a cron-file, which by default adds a start and a stop to the screen running the google scraper (times in UTC).
 It also starts the google scraper when run. Remove the row that does this in the `run.sh` to avoid this.
 If you're starting the docker file before the time it should start via crontab you should enter the docker image via bash and kill the python process. Then it's smooth sailing from there.
 
 
-### How it works:
-Once you start running the script it will update on today's matches, then keep running and update about new goals, half-time score and match endings (with score).
-Personally running it on a server with a cronjob that starts a screen with the script at 9 in the morning, then kills the screen in the evening.
+## How it works:
+Once you start running the script it will update on today's matches, then keep running and update about new goals, half-time score and match endings (with score). It will also (hopefully) tell you if there are any red cards (at least one per team) delt out during the match.
+Once all of todays matches are ended it will exit.
+Personally running it in a docker container with a crontab looking exactly like the example.
 
 The different .py files use different ways to find out the information needed:
+* `google.py` is a webscraper that uses googles real time updates
 * `wc.py` uses the API of https://github.com/estiens/world_cup_json
 * `fd.py` uses the API of football-data.org (a token from there is needed)
-* `google.py` is a webscraper that uses googles real time updates
 
 
-### Disclaimer
+## Disclaimer
 All of the updaters work on a scraper, which is inherently not a very safe way to gather information.
 The code is mostly written in a few hours and then trying to monkey-patch once an error is found.
 Do not use the code as a good example of python code, and keep in mind that the data it relies upon might fail.
