@@ -1,3 +1,2 @@
-CRON_TZ=Europe/Stockholm
-0 9 * * * screen -d -m python /usr/src/app/google.py
-59 23 * * * killall screen
+0 7 * * * /usr/local/bin/python /usr/src/app/google.py
+59 22 * * * killall python

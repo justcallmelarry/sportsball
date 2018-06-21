@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3-slim
 
 WORKDIR /usr/src/app
 
@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get update
 RUN apt-get -y install cron
+RUN apt-get -y install procps
 
 COPY crontab ./
 ADD crontab /etc/cron.d/banana-cron
@@ -16,5 +17,4 @@ RUN /usr/bin/crontab /etc/cron.d/banana-cron
 
 COPY . .
 
-CMD cron && tail -f /var/log/cron.log
-CMD [ "python", "./google.py" ]
+CMD ./run.sh

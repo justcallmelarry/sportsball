@@ -50,7 +50,7 @@ Modules not installed by deafult:
 
 ### Docker
 Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings.json`-file with the correct information_.
-The Dockerfile will start an instance and add the `crontab`-file (use the .example to get the hint) as a cron-file, which by default sets the cron timezone to Stockholm and adds a start and a stop to the screen running the google scraper.
+The Dockerfile will start an instance and add the `crontab`-file (use the .example to get the hint) as a cron-file, which by default adds a start and a stop to the screen running the google scraper (times in UTC).
 It also starts the google scraper when run. Remove the last CMD in the docker file to avoid this.
 
 
