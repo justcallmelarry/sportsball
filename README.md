@@ -40,7 +40,7 @@ _(See `docs/settings.json.example`)_
 ```
 _More instances of slack are supported, just add more objects with webhook and channel (and optionally participants)_
 
-_The participants array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
+_The participants object can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message for that slack_instance._
 
 Requires: python 3.6
 
