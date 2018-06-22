@@ -51,7 +51,7 @@ Modules not installed by deafult:
 _Can be installed via requirements.txt_
 
 ### Docker
-Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings/settings.json`-file with the correct information, and at least an empty `settings/crontab` file. See `docs/` for examples of both files_.
+Optionally you can build and run the docker file in order to avoid having to install python3 and/or it's dependencies. Do not forget to _first create a valid `settings/settings.json`-file with the correct information, and at least an empty `settings/crontab` file. See `docs/` for examples of both files_.
 The Dockerfile will start an instance and add the `crontab`-file (use the .example to get the hint) as a cron-file, which by default adds a start and a stop to the screen running the google scraper (times in UTC).
 It also starts the google scraper when run. Remove the row that does this in the `run.sh` to avoid this.
 If you're starting the docker file before the time it should start via crontab you should enter the docker image via bash and kill the python process. Then it's smooth sailing from there.
