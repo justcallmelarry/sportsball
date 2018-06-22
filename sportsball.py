@@ -1,4 +1,4 @@
-from app import google
+from app import google as sportsball  # other choices are fd and wc, just replace google
 import asyncio
 import json
 import os
@@ -11,13 +11,13 @@ async def main(file):
     feel free to use the class in other ways if preferred
     you can specify another settings file than settings.json as an argument, for testing purposes
     '''
-    WCS = google.WorldCupSlackReporter()
+    WCS = sportsball.WorldCupSlackReporter()
     if not file:
         with open(os.path.join(WCS.project_path, 'settings', 'settings.json'), 'r') as settings_file:
-            settings = json.loads(settings_file.read())
+            settings = json.load(settings_file)
     else:
         with open(file, 'r') as settings_file:
-            settings = json.loads(settings_file.read())
+            settings = json.load(settings_file)
     WCS.slack_instances = settings.get('slack_instances')
     WCS.slack_payload = settings.get('slack_payload')
     # WCS.headers = {'X-Auth-Token': settings.get('football-data-token')}  # uncomment if using fd.py
