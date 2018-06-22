@@ -65,15 +65,15 @@ class WorldCupSlackReporter:
             'France': ':flag-fr:', 'Australia': ':flag-au:',
             'Argentina': ':flag-ar:', 'Iceland': ':flag-is:',
             'Peru': ':flag-pe:', 'Denmark': ':flag-dk:',
-            'Croatia': ':flag-hr:', 'Costa Rica': 'flag-cr',
-            'Serbia': ':flag-rs:', 'Germany': 'flag-de',
+            'Croatia': ':flag-hr:', 'Costa Rica': ':flag-cr:',
+            'Serbia': ':flag-rs:', 'Germany': ':flag-de:',
             'Mexico': ':flag-mx:', 'Brazil': ':flag-br:',
             'Switzerland': ':flag-ch:', 'Sweden': ':flag-se:',
             'South Korea': ':flag-kr:', 'Belguim': ':flag-be:',
             'Panama': ':flag-pa:', 'Tunisia': ':flag-tn:',
             'England': ':flag-england:', 'Colombia': ':flag-co:',
             'Japan': ':flag-jp:', 'Poland': ':flag-pl:',
-            'Senegal': ':flag-sn:'
+            'Senegal': ':flag-sn:', 'Nigeria': ':flag-ng:'
 
         }
         return emojis.get(phrase, ':question:')
@@ -138,16 +138,16 @@ class WorldCupSlackReporter:
         for match in matches:
             status = 0
             match = match.contents[0]
-            hteam = self.get_info(match, [2, 1, 1, 0]).text
-            hteamgoals = self.goalfixer(self.get_info(match, [2, 1, 0]).text)
-            ateam = self.get_info(match, [4, 1, 1, 0]).text
-            ateamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
+            hteam = self.get_info(match, [4, 1, 1, 0]).text
+            hteamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
+            ateam = self.get_info(match, [5, 1, 1, 0]).text
+            ateamgoals = self.goalfixer(self.get_info(match, [5, 1, 0]).text)
             match_type = self.get_info(match, [1, 0, 0, 2]).text
             try:
-                when = self.get_info(match, [0, 4, 0, 0, 0]).contents
+                when = self.get_info(match, [2, 2, 0, 0, 0]).contents
                 when = when[0].text, when[1].text
             except Exception as e:
-                when = ('Today', 'Already started') if 'ft' not in self.status('', match, [0, 4, 0]) else ('Today', 'Already ended')
+                when = ('Today', 'Already started') if 'ft' not in self.status('', match, [2, 2, 0]) else ('Today', 'Already ended')
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
@@ -168,8 +168,8 @@ class WorldCupSlackReporter:
                         'a': False
                     }
                 }
-            hinfo = self.get_info(match, [2, 1, 1, 0, 2, 0])
-            ainfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
                 self.matches[match_id]['redflag']['h'] = True
             if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
@@ -192,20 +192,21 @@ class WorldCupSlackReporter:
         for match in matches:
             match = match.contents[0]
             message = ''
-            hteam = self.get_info(match, [2, 1, 1, 0]).text
-            hteamgoals = self.goalfixer(self.get_info(match, [2, 1, 0]).text)
-            ateam = self.get_info(match, [4, 1, 1, 0]).text
-            ateamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
+            hteam = self.get_info(match, [4, 1, 1, 0]).text
+            hteamgoals = self.goalfixer(self.get_info(match, [4, 1, 0]).text)
+            ateam = self.get_info(match, [5, 1, 1, 0]).text
+            ateamgoals = self.goalfixer(self.get_info(match, [5, 1, 0]).text)
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
             local_matches.append(match_id)
             status = ''
-            status = self.status(status, match, [0, 4, 0, 1, 0])
-            status += self.status(status, match, [0, 4, 0, 1, 2])
-            status += self.status(status, match, [0, 4, 0, 3, 0])
-            hinfo = self.get_info(match, [2, 1, 1, 0, 2, 0])
-            ainfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            status = self.status(status, match, [2, 2, 0])
+            # status = self.status(status, match, [0, 4, 0, 1, 0])
+            # status += self.status(status, match, [0, 4, 0, 1, 2])
+            # status += self.status(status, match, [0, 4, 0, 3, 0])
+            hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
+            ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
                 message += f'{hteam} just received a red card!\n'
                 self.matches[match_id]['redflag']['h'] = True
