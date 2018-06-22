@@ -14,7 +14,7 @@ class WorldCupSlackReporter:
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         self.hours_to_add = 0
         self.matches = {}
-        self.sleep = 5
+        self.sleep = 43200
 
         self.sem = asyncio.Semaphore(5)
         self.session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False))
