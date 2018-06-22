@@ -59,8 +59,9 @@ If you're starting the docker file before the time it should start via crontab y
 
 
 ## How it works:
-Once you start running the script it will update on today's matches, then keep running and update about new goals, half-time score and match endings (with score). It will also (hopefully) tell you if there are any red cards (at least one per team) delt out during the match.
+Once you start running the script it will update on today's matches, then keep running and update about new goals, half-time score and match endings (with score). It will also (hopefully) tell you if there are any red cards (at least one per team) dealt out during the match.
 Once all of todays matches are ended it will exit.
+
 Personally running it in a docker container with a crontab looking exactly like the example.
 
 The different .py files use different ways to find out the information needed:
@@ -72,4 +73,4 @@ The different .py files use different ways to find out the information needed:
 ## Disclaimer
 All of the updaters work on a scraper, which is inherently not a very safe way to gather information.
 The code is mostly written in a few hours and then trying to monkey-patch once an error is found.
-Do not use the code as a good example of python code, and keep in mind that the data it relies upon might fail.
+Do not use the code as a good example of python code, and keep in mind that the data it relies upon might fail, or receive updates that will force a re-write of the scrapers at any time.
