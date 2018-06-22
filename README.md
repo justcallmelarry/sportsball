@@ -11,14 +11,14 @@ Just updated with a breaking change, sorry for that, but old code is still avail
 ## Setup
 You will need a `settings.json` file with the following information (located in `/settings`):
 
-_(See docs/settings.json.example)_
+_(See `docs/settings.json.example`)_
 ```
 {
   "slack_instances": [
     {
       "webhook": "https://hooks.slack.com/services/your/webhook/here",
       "channel": "#wc2018"
-      "participants": {
+      "participants": {  //optional, see description below. currently only used by google.py
             "Argentina": "Jason",
             "Australia": "Euan",
             "Belgium": "Ian",
@@ -34,13 +34,13 @@ _(See docs/settings.json.example)_
     "icon_emoji": ":soccer:",
     "link_names": 1
   },
-  "football-data-token": "token",
-  "hours_to_add": 0 //this is if you're running it on a server that does not have the same time zone as your local time
+  "football-data-token": "token",  //only used by fd.py
+  "hours_to_add": 0 //this is if you're running it on a server that does not have the same time zone as your local time, currently only used by google.py
 }
 ```
-_More instances of slack are supported, just add more dicts with webhook and channel_
+_More instances of slack are supported, just add more objects with webhook and channel (and optionally participants)_
 
-_Optionally, a participants array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
+_The participants array can be added to slack_instance. Countries will then be substituted for the country name followed by the name in brackets in the Slack message_
 
 Requires: python 3.6
 
@@ -51,7 +51,7 @@ Modules not installed by deafult:
 _Can be installed via requirements.txt_
 
 ### Docker
-Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings/settings.json`-file with the correct information (and at least an empty `settings/crontab` file, see `docs/crontab.example` for example)_.
+Optionally you can build and run the docker file in order to avoid having to install python3 and or it's dependencies. Do not forget to _first create a valid `settings/settings.json`-file with the correct information, and at least an empty `settings/crontab` file. See `docs/` for examples of both files_.
 The Dockerfile will start an instance and add the `crontab`-file (use the .example to get the hint) as a cron-file, which by default adds a start and a stop to the screen running the google scraper (times in UTC).
 It also starts the google scraper when run. Remove the row that does this in the `run.sh` to avoid this.
 If you're starting the docker file before the time it should start via crontab you should enter the docker image via bash and kill the python process. Then it's smooth sailing from there.
