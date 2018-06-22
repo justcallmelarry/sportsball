@@ -5,6 +5,7 @@ A slack integration for updating start, stop, half-time and goals of WC 2018.
 I am personally running the script called `google.py` as it seems more reliable than the API's tested.
 It's also more basic, which is probably why the API's are having more trouble sorting the information.
 This, however, means that I am spending little to no time on the other updaters, but feel free to fork away or send me a PR if you want any updates for yourself. This also means that everything covered in this readme is concerning the `google.py`-script, and the other two are deprecated.
+Just updated with a breaking change, sorry for that, but old code is still available as a release (v1.0) if needed.
 
 
 ## Setup
