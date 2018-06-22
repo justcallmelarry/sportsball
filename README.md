@@ -48,6 +48,7 @@ Modules not installed by deafult:
 * aiohttp
 * bs4
 * dateutil (python-dateutil)
+
 _Can be installed via requirements.txt_
 
 ### Docker
