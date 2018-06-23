@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import random
+import sys
 
 
 class WorldCupSlackReporter:
@@ -25,6 +26,7 @@ class WorldCupSlackReporter:
 
         self.slack_instances = []
         self.slack_payload = None
+        self.output = True
 
     async def url_get(self, url):
         '''
@@ -113,6 +115,13 @@ class WorldCupSlackReporter:
             return 0
         return goal
 
+    def _output(self, *message):
+        if self.output:
+            m = '{}\n'.format(' '.join(message))
+            sys.stdout.write(m)
+            with open(os.path.join(self.project_path, 'logs', 'banana.log'), 'a+') as logfile:
+                logfile.write(f'{datetime.now()}: {m}')
+
     def status(self, text, match, conlist):
         '''
         adds text to status if present, else just returns text
@@ -175,7 +184,9 @@ class WorldCupSlackReporter:
             if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
                 self.matches[match_id]['redflag']['a'] = True
             add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
+            self._output(f'{self.matches.get(match_id)}')
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
+        self._output(f'sleeping {self.sleep} seconds')
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
@@ -199,9 +210,11 @@ class WorldCupSlackReporter:
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
+            self._output(f'{hteam} {hteamgoals} - {ateamgoals} {ateam}')
             local_matches.append(match_id)
             status = ''
             status = self.status(status, match, [2, 2, 0])
+            self._output(f'{match_id} status: {status}')
             # status = self.status(status, match, [0, 4, 0, 1, 0])
             # status += self.status(status, match, [0, 4, 0, 1, 2])
             # status += self.status(status, match, [0, 4, 0, 3, 0])

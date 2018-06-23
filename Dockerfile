@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # RUN /usr/bin/crontab /etc/cron.d/banana-cron
 
 # CMD ./tools/run.sh
-CMD ["python", "sportsball.py"]
+CMD ["python", "./sportsball.py"]
