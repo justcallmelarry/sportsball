@@ -9,7 +9,6 @@ run:
 		-d \
 		--rm \
 		--name=sb \
-		-e=TZ=Europe/Stockholm \
 		sportsball
 
 enter:
