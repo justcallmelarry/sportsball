@@ -54,7 +54,8 @@ _Can be installed via requirements.txt_
 ### Docker
 Optionally you can build and run the docker file in order to avoid having to install python3 and/or it's dependencies. Do not forget to _first create a valid `settings/settings.json`-file with the correct information_.
 The Dockerfile will start an instance and run `sportsball.py`.
-The crontab seems to work so-so, so for now that part i scrapped. Please run the docker image from cron wherever it is run instead.
+
+_The crontab seems to work so-so, so for now that part i scrapped. Please run the docker image from cron wherever it is run instead._
 
 
 ## How it works:
