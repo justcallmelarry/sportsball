@@ -215,7 +215,7 @@ class WorldCupSlackReporter:
                 self.matches[match_id]['redflag']['a'] = True
             score = f'{hteamgoals} - {ateamgoals}'
 
-            if any(x in status.lower() for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
+            if any(x in status for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
 
