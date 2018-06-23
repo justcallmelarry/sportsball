@@ -223,21 +223,20 @@ class WorldCupSlackReporter:
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
                 message += f'{hteam} just received a red card!\n'
                 self.matches[match_id]['redflag']['h'] = True
+                self._output(f'{hteam} red flag update')
             if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
                 message += f'{ateam} just received a red card!\n'
                 self.matches[match_id]['redflag']['a'] = True
+                self._output(f'{ateam} red flag update')
             score = f'{hteamgoals} - {ateamgoals}'
 
             if any(x in status for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
                 self.matches[match_id]['status'] = 1
+                self._output(f'{match_id} match start update')
 
             if self.matches.get(match_id).get('status') in (0, 2):
                 continue
-
-            if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
-                self.matches[match_id]['half-time'] = True
-                message += f'Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
 
             if score != self.matches.get(match_id).get('score'):
                 message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
@@ -245,10 +244,17 @@ class WorldCupSlackReporter:
                     message = message.replace('GOOOOOOOAL!', 'Score update:')
                 self.matches[match_id]['goalcount'] = hteamgoals + ateamgoals
                 self.matches[match_id]['score'] = score
+                self._output(f'{match_id} goal update')
+
+            if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
+                self.matches[match_id]['half-time'] = True
+                message += f'Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                self._output(f'{match_id} half-time update')
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
                 message += f'Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['status'] = 2
+                self._output(f'{match_id} end of match update')
             asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def monitor(self):
