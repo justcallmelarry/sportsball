@@ -69,7 +69,7 @@ class WorldCupSlackReporter:
             'Serbia': ':flag-rs:', 'Germany': ':flag-de:',
             'Mexico': ':flag-mx:', 'Brazil': ':flag-br:',
             'Switzerland': ':flag-ch:', 'Sweden': ':flag-se:',
-            'South Korea': ':flag-kr:', 'Belguim': ':flag-be:',
+            'South Korea': ':flag-kr:', 'Belgium': ':flag-be:',
             'Panama': ':flag-pa:', 'Tunisia': ':flag-tn:',
             'England': ':flag-england:', 'Colombia': ':flag-co:',
             'Japan': ':flag-jp:', 'Poland': ':flag-pl:',
