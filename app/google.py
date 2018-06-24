@@ -80,14 +80,13 @@ class WorldCupSlackReporter:
         }
         return emojis.get(phrase, ':question:')
 
-    @staticmethod
-    def calc_seconds(timestring):
+    def calc_seconds(self, timestring):
         try:
             hour = int(timestring[:2])
             minute = int(timestring[-2:])
         except Exception:
             return 5
-        now = datetime.now()
+        now = datetime.now() + timedelta(hours=self.hours_to_add)
         target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         if target < now:  # if the target is before now, add one day
             target += timedelta(days=1)
@@ -160,8 +159,8 @@ class WorldCupSlackReporter:
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
-            self.sleep = min(self.sleep, self.calc_seconds(when[1]))
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if 'Already' not in when[1] else when[1]
+            self.sleep = min(self.sleep, self.calc_seconds(start_time))
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
