@@ -186,7 +186,7 @@ class WorldCupSlackReporter:
             add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
             self._output(f'{self.matches.get(match_id)}')
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
-        self._output(f'sleeping {self.sleep} seconds')
+        self._output(f'sleeping {self.sleep} seconds ({str(timedelta(seconds=self.sleep))})')
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
     async def get_current_matches(self):
