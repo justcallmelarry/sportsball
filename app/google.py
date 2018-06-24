@@ -81,7 +81,7 @@ class WorldCupSlackReporter:
         return emojis.get(phrase, ':question:')
 
     @staticmethod
-    def calc_seconds(self, timestring):
+    def calc_seconds(timestring):
         try:
             hour = int(timestring[:2])
             minute = int(timestring[-2:])
