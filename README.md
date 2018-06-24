@@ -63,6 +63,7 @@ Once you start running the script it will update on today's matches, then keep r
 Once all of todays matches are ended it will exit.
 
 Personally running it in a docker container with a crontab looking exactly like the example.
+For the sleep-calculation to work properly you should run the script either on a server in your own timezone, or via docker speciying your current timezone _(-e TZ=Europe/Stockholm for example)_.
 
 The different .py files use different ways to find out the information needed:
 * `google.py` is a webscraper that uses googles real time updates
