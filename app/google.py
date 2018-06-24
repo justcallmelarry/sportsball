@@ -80,13 +80,14 @@ class WorldCupSlackReporter:
         }
         return emojis.get(phrase, ':question:')
 
+    @staticmethod
     def calc_seconds(self, timestring):
         try:
             hour = int(timestring[:2])
             minute = int(timestring[-2:])
         except Exception:
             return 5
-        now = datetime.now() + timedelta(hours=self.hours_to_add)
+        now = datetime.now()
         target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         if target < now:  # if the target is before now, add one day
             target += timedelta(days=1)
