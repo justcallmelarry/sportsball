@@ -160,8 +160,8 @@ class WorldCupSlackReporter:
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
+            self.sleep = min(self.sleep, self.calc_seconds(when[1]))
             start_time = (datetime.strptime(when[1], '%H:%M') + timedelta(hours=self.hours_to_add)).strftime('%H:%M') if 'Already' not in when[1] else when[1]
-            self.sleep = min(self.sleep, self.calc_seconds(start_time))
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
