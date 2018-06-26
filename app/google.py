@@ -215,9 +215,6 @@ class WorldCupSlackReporter:
             status = ''
             status = self.status(status, match, [2, 2, 0])
             self._output(f'{match_id} status: {status}')
-            # status = self.status(status, match, [0, 4, 0, 1, 0])
-            # status += self.status(status, match, [0, 4, 0, 1, 2])
-            # status += self.status(status, match, [0, 4, 0, 3, 0])
             hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
             ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
@@ -260,7 +257,7 @@ class WorldCupSlackReporter:
     async def monitor(self):
         '''
         assure that current matches are scraped regularily
-        scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspisius acitivity
+        scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspicious acitivity
         '''
         all_done = False
         while not all_done:
