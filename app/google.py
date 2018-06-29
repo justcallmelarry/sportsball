@@ -156,7 +156,10 @@ class WorldCupSlackReporter:
                 when = self.get_info(match, [2, 2, 0, 0, 0]).contents
                 when = when[0].text, when[1].text
             except Exception as e:
-                when = ('Today', 'Already started') if 'ft' not in self.status('', match, [2, 2, 0]) else ('Today', 'Already ended')
+                status = self.status('', match, [2, 2, 0])
+                if 'yesterday' in status:
+                    continue
+                when = ('Today', 'Already started') if 'ft' not in status else ('Today', 'Already ended')
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
@@ -186,6 +189,9 @@ class WorldCupSlackReporter:
             add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
             self._output(f'{self.matches.get(match_id)}')
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
+        if message == 'Today\'s matches:\n':
+            self.sleep = 0
+            return
         self._output(f'sleeping {self.sleep} seconds ({str(timedelta(seconds=self.sleep))})')
         asyncio.ensure_future(self._slack_output(message.rstrip()))
 
@@ -259,7 +265,10 @@ class WorldCupSlackReporter:
         assure that current matches are scraped regularily
         scraping is done between 55 and 87 seconds randomly in order to potentially avoid suspicious acitivity
         '''
-        all_done = False
+        if len(self.matches) > 0:
+            all_done = False
+        else:
+            all_done = True
         while not all_done:
             asyncio.ensure_future(self.get_current_matches())
             await asyncio.sleep(random.choice(range(55, 87)))
