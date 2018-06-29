@@ -157,7 +157,7 @@ class WorldCupSlackReporter:
                 when = when[0].text, when[1].text
             except Exception as e:
                 status = self.status('', match, [2, 2, 0])
-                if 'yesterday' in status:
+                if any(x not in status for x in ('today', 'idag')):
                     continue
                 when = ('Today', 'Already started') if 'ft' not in status else ('Today', 'Already ended')
                 status = 1 if 'started' in when[1] else 2
