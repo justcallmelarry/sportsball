@@ -109,10 +109,18 @@ class WorldCupSlackReporter:
         '''
         checks that there is a number present or returns 0
         '''
-        try:
-            goal = int(goal)
-        except Exception:
-            return 0
+        if '(' in goal:
+            rg = goal.replace(' ', '').replace(')', '')
+            goal = rg.split('(')
+            try:
+                goal = (int(goal[0]), int(goal[1]))
+            except Exception:
+                goal = (0, 0)
+        else:
+            try:
+                goal = (int(goal[0]), None)
+            except Exception:
+                goal = (0, None)
         return goal
 
     def _output(self, *message):
@@ -156,10 +164,10 @@ class WorldCupSlackReporter:
                 when = self.get_info(match, [2, 2, 0, 0, 0]).contents
                 when = when[0].text, when[1].text
             except Exception as e:
-                status = self.status('', match, [2, 2, 0])
-                if any(x not in status for x in ('today', 'idag')):
+                statustext = self.status('', match, [2, 2, 0])
+                if not any(x in statustext for x in ('today', 'live', 'half')):
                     continue
-                when = ('Today', 'Already started') if 'ft' not in status else ('Today', 'Already ended')
+                when = ('Today', 'Already started') if 'ft' not in statustext else ('Today', 'Already ended')
                 status = 1 if 'started' in when[1] else 2
             if when[0] not in ('Idag', 'Today'):
                 continue
@@ -168,8 +176,8 @@ class WorldCupSlackReporter:
             match_id = hteam + ateam
             if match_id not in self.matches:
                 self.matches[match_id] = {
-                    'score': f'{hteamgoals} - {ateamgoals}',
-                    'goalcount': hteamgoals + ateamgoals,
+                    'score': f'{hteamgoals[0]} - {ateamgoals[0]}',
+                    'goalcount': hteamgoals[0] + ateamgoals[0],
                     'event_ids': [],
                     'status': status,
                     'hteam': hteam,
@@ -180,13 +188,15 @@ class WorldCupSlackReporter:
                         'a': False
                     }
                 }
+            if all([hteamgoals[1], ateamgoals[1]]):
+                self.matches[match_id]['score'] = self.matches[match_id].get('score').replace('-', f'({hteamgoals[1]}) - ({ateamgoals[1]})')
             hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
             ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
                 self.matches[match_id]['redflag']['h'] = True
             if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
                 self.matches[match_id]['redflag']['a'] = True
-            add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals} - {ateamgoals} '
+            add_score = ' vs ' if 'Already' not in when[1] else f' {self.matches.get(match_id).get("score")} '
             self._output(f'{self.matches.get(match_id)}')
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
         if message == 'Today\'s matches:\n':
@@ -216,7 +226,7 @@ class WorldCupSlackReporter:
             match_id = hteam + ateam
             if match_id not in self.matches:
                 continue
-            self._output(f'{hteam} {hteamgoals} - {ateamgoals} {ateam}')
+            self._output(f'{hteam} {hteamgoals[0]} - {ateamgoals[0]} {ateam}')
             local_matches.append(match_id)
             status = ''
             status = self.status(status, match, [2, 2, 0])
@@ -231,7 +241,7 @@ class WorldCupSlackReporter:
                 message += f'{ateam} just received a red card!\n'
                 self.matches[match_id]['redflag']['a'] = True
                 self._output(f'{ateam} red flag update')
-            score = f'{hteamgoals} - {ateamgoals}'
+            score = f'{hteamgoals[0]} - {ateamgoals[0]}'
 
             if any(x in status for x in ('live', 'pågår')) and self.matches.get(match_id).get('status') == 0:
                 message += f'{hteam} {self.emojify(hteam)} vs {self.emojify(ateam)} {ateam} just started!\n'
@@ -242,20 +252,23 @@ class WorldCupSlackReporter:
                 continue
 
             if score != self.matches.get(match_id).get('score'):
-                message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
-                if (hteamgoals + ateamgoals) <= self.matches.get(match_id).get('goalcount'):
+                message += f'GOOOOOOOAL!\n{hteam} {self.emojify(hteam)} {hteamgoals[0]} - {ateamgoals[0]} {self.emojify(ateam)} {ateam}\n'
+                if (hteamgoals[0] + ateamgoals[0]) <= self.matches.get(match_id).get('goalcount'):
                     message = message.replace('GOOOOOOOAL!', 'Score update:')
-                self.matches[match_id]['goalcount'] = hteamgoals + ateamgoals
+                self.matches[match_id]['goalcount'] = hteamgoals[0] + ateamgoals[0]
                 self.matches[match_id]['score'] = score
                 self._output(f'{match_id} goal update')
 
             if any(x in status for x in ('half–time', 'halvtid', 'ht', 'half')) and not self.matches.get(match_id).get('half-time'):
                 self.matches[match_id]['half-time'] = True
-                message += f'Half-time: {hteam} {self.emojify(hteam)} {hteamgoals} vs {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                message += f'Half-time: {hteam} {self.emojify(hteam)} {hteamgoals[0]} vs {ateamgoals[0]} {self.emojify(ateam)} {ateam}\n'
                 self._output(f'{match_id} half-time update')
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
-                message += f'Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals} - {ateamgoals} {self.emojify(ateam)} {ateam}\n'
+                separator = '-'
+                if all([hteamgoals[1], ateamgoals[1]]):
+                    separator = separator.replace('-', f'({hteamgoals[1]}) - ({ateamgoals[1]})')
+                message += f'Match ended! Final score:\n{hteam} {self.emojify(hteam)} {hteamgoals[0]} {separator} {ateamgoals[0]} {self.emojify(ateam)} {ateam}\n'
                 self.matches[match_id]['status'] = 2
                 self._output(f'{match_id} end of match update')
             asyncio.ensure_future(self._slack_output(message.rstrip()))
