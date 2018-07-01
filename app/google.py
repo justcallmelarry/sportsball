@@ -188,15 +188,15 @@ class WorldCupSlackReporter:
                         'a': False
                     }
                 }
-            if all([hteamgoals[1], ateamgoals[1]]):
-                self.matches[match_id]['score'] = self.matches[match_id].get('score').replace('-', f'({hteamgoals[1]}) - ({ateamgoals[1]})')
             hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
             ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
             if hinfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('h'):
                 self.matches[match_id]['redflag']['h'] = True
             if ainfo.get('style') != 'display:none' and not self.matches.get(match_id).get('redflag').get('a'):
                 self.matches[match_id]['redflag']['a'] = True
-            add_score = ' vs ' if 'Already' not in when[1] else f' {self.matches.get(match_id).get("score")} '
+            add_score = ' vs ' if 'Already' not in when[1] else f' {hteamgoals[0]} - {ateamgoals[0]} '
+            if all([hteamgoals[1], ateamgoals[1]]):
+                add_score = add_score.replace('-', f'({hteamgoals[1]}) - ({ateamgoals[1]})')
             self._output(f'{self.matches.get(match_id)}')
             message += f'{self.emojify(start_time)} *{start_time}*: {hteam} {self.emojify(hteam)}{add_score}{self.emojify(ateam)} {ateam} ({match_type})\n'
         if message == 'Today\'s matches:\n':
