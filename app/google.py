@@ -186,7 +186,8 @@ class WorldCupSlackReporter:
                     'redflag': {
                         'h': False,
                         'a': False
-                    }
+                    },
+                    'match_type': match_type.lower()
                 }
             hinfo = self.get_info(match, [4, 1, 1, 0, 2, 0])
             ainfo = self.get_info(match, [5, 1, 1, 0, 2, 0])
@@ -267,8 +268,7 @@ class WorldCupSlackReporter:
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
                 hwin = self.get_info(match, [4, 2, 0])
                 awin = self.get_info(match, [5, 2, 0])
-                print(hwin)
-                if hwin.get('style') == 'display:none' and awin.get('style') == 'display:none':
+                if hwin.get('style') == 'display:none' and awin.get('style') == 'display:none' and 'group' not in self.matches.get(match_id).get('match_type'):
                     continue
                 separator = '-'
                 if all([hteamgoals[1], ateamgoals[1]]):
