@@ -265,6 +265,11 @@ class WorldCupSlackReporter:
                 self._output(f'{match_id} half-time update')
 
             if any(x in status for x in ('ended', 'full-time', 'ft', 'full')):
+                hwin = self.get_info(match, [4, 2, 0])
+                awin = self.get_info(match, [5, 2, 0])
+                print(hwin)
+                if hwin.get('style') == 'display:none' and awin.get('style') == 'display:none':
+                    continue
                 separator = '-'
                 if all([hteamgoals[1], ateamgoals[1]]):
                     separator = separator.replace('-', f'({hteamgoals[1]}) - ({ateamgoals[1]})')
